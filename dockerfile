@@ -5,4 +5,4 @@ RUN apt-get update && apt-get install nano -y && apt-get install vim -y && apt-g
 
 WORKDIR /publish
 COPY /publish /publish
-ENTRYPOINT dotnet sklabelimportusers.dll
+ENTRYPOINT dotnet sklabelspecialservice.dll

@@ -1,3 +1,3 @@
-﻿﻿docker rmi -f petrjahoda/sklabelimportusers:latest
-docker build -t petrjahoda/sklabelimportusers:latest .
-docker push petrjahoda/sklabelimportusers:latest
+﻿﻿docker rmi -f petrjahoda/sklabelspecialservice:latest
+docker build -t petrjahoda/sklabelspecialservice:latest .
+docker push petrjahoda/sklabelspecialservice:latest

@@ -1,3 +1,6 @@
 ﻿
 # Default ignored files
 /.idea.sklabelspecialservice/.idea/workspace.xml
+# Datasource local storage ignored files
+/.idea.sklabelspecialservice/.idea/dataSources/
+/.idea.sklabelspecialservice/.idea/dataSources.local.xml

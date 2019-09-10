@@ -1,4 +1,4 @@
-﻿namespace terminalServerCore {
+﻿namespace sklabelspecialservice {
     public class Config {
         public string Ipaddress { get; set; }
         public string Database { get; set; }
@@ -10,14 +10,12 @@
         public string DownloadEvery { get; set; }
         public string DeleteFilesAfterDays { get; set; }
         public string DatabaseType { get; set; }
-        public string CloseOnlyAutomaticIdles { get; set; }
-        public string AddCyclesToOrder { get; set; }
         public string SmtpClient { get; set; }
         public string SmtpUsername { get; set; }
         public string SmtpPassword { get; set; }
         public string SmtpPort { get; set; }
 
-        public  Config() {
+        public Config() {
             Ipaddress = "zapsidatabase";
             Port = "3306";
             Database = "zapsi2";
@@ -28,13 +26,10 @@
             DownloadEvery = "10000";
             DeleteFilesAfterDays = "-20";
             DatabaseType = "mysql";
-            CloseOnlyAutomaticIdles = "0";
             SmtpClient = "smtp.forpsi.com";
             SmtpPort = "25";
             SmtpUsername = "support@zapsi.eu";
             SmtpPassword = "Zps05.....";
-            AddCyclesToOrder = "0";
         }
-
     }
 }
