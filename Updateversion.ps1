@@ -1,4 +1,4 @@
-﻿﻿$year = (Get-Date).Year;
+﻿$year = (Get-Date).Year;
 $quarter = [Math]::ceiling((Get-date -f MM)/3);
 $month = (Get-Date).Month;
 $monthNumber = $month - 3 * ($quarter - 1);

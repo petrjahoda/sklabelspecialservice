@@ -20,6 +20,80 @@
       </e>
       <e p="packages" t="ExcludeRecursive" />
       <e p="Program.cs" t="Include" />
+      <e p="publish" t="Include">
+        <e p="Microsoft.EntityFrameworkCore.Abstractions.dll" t="Include" />
+        <e p="Microsoft.EntityFrameworkCore.dll" t="Include" />
+        <e p="Microsoft.EntityFrameworkCore.Relational.dll" t="Include" />
+        <e p="Microsoft.EntityFrameworkCore.SqlServer.dll" t="Include" />
+        <e p="Microsoft.Extensions.Caching.Abstractions.dll" t="Include" />
+        <e p="Microsoft.Extensions.Caching.Memory.dll" t="Include" />
+        <e p="Microsoft.Extensions.Configuration.Abstractions.dll" t="Include" />
+        <e p="Microsoft.Extensions.Configuration.Binder.dll" t="Include" />
+        <e p="Microsoft.Extensions.Configuration.dll" t="Include" />
+        <e p="Microsoft.Extensions.Configuration.FileExtensions.dll" t="Include" />
+        <e p="Microsoft.Extensions.Configuration.Json.dll" t="Include" />
+        <e p="Microsoft.Extensions.DependencyInjection.Abstractions.dll" t="Include" />
+        <e p="Microsoft.Extensions.DependencyInjection.dll" t="Include" />
+        <e p="Microsoft.Extensions.FileProviders.Abstractions.dll" t="Include" />
+        <e p="Microsoft.Extensions.FileProviders.Physical.dll" t="Include" />
+        <e p="Microsoft.Extensions.FileSystemGlobbing.dll" t="Include" />
+        <e p="Microsoft.Extensions.Logging.Abstractions.dll" t="Include" />
+        <e p="Microsoft.Extensions.Logging.dll" t="Include" />
+        <e p="Microsoft.Extensions.Options.dll" t="Include" />
+        <e p="Microsoft.Extensions.Primitives.dll" t="Include" />
+        <e p="MySqlConnector.dll" t="Include" />
+        <e p="Newtonsoft.Json.dll" t="Include" />
+        <e p="Remotion.Linq.dll" t="Include" />
+        <e p="runtimes" t="Include">
+          <e p="unix" t="Include">
+            <e p="lib" t="Include">
+              <e p="netcoreapp2.1" t="Include">
+                <e p="System.Data.SqlClient.dll" t="Include" />
+              </e>
+            </e>
+          </e>
+          <e p="win" t="Include">
+            <e p="lib" t="Include">
+              <e p="netcoreapp2.0" t="Include">
+                <e p="System.Text.Encoding.CodePages.dll" t="Include" />
+              </e>
+              <e p="netcoreapp2.1" t="Include">
+                <e p="System.Data.SqlClient.dll" t="Include" />
+              </e>
+            </e>
+          </e>
+          <e p="win-arm64" t="Include">
+            <e p="native" t="Include">
+              <e p="sni.dll" t="Include" />
+            </e>
+          </e>
+          <e p="win-x64" t="Include">
+            <e p="native" t="Include">
+              <e p="sni.dll" t="Include" />
+            </e>
+          </e>
+          <e p="win-x86" t="Include">
+            <e p="native" t="Include">
+              <e p="sni.dll" t="Include" />
+            </e>
+          </e>
+        </e>
+        <e p="Serilog.dll" t="Include" />
+        <e p="Serilog.Extensions.Logging.dll" t="Include" />
+        <e p="Serilog.Extensions.Logging.File.dll" t="Include" />
+        <e p="Serilog.Formatting.Compact.dll" t="Include" />
+        <e p="Serilog.Sinks.Async.dll" t="Include" />
+        <e p="Serilog.Sinks.File.dll" t="Include" />
+        <e p="Serilog.Sinks.RollingFile.dll" t="Include" />
+        <e p="sklabelspecialservice.deps.json" t="Include" />
+        <e p="sklabelspecialservice.dll" t="Include" />
+        <e p="sklabelspecialservice.pdb" t="Include" />
+        <e p="sklabelspecialservice.runtimeconfig.json" t="Include" />
+        <e p="System.Data.SqlClient.dll" t="Include" />
+        <e p="System.Interactive.Async.dll" t="Include" />
+        <e p="System.Runtime.CompilerServices.Unsafe.dll" t="Include" />
+        <e p="System.Text.Encoding.CodePages.dll" t="Include" />
+      </e>
       <e p="sklabelspecialservice.csproj" t="IncludeRecursive" />
       <e p="sklabelspecialservice.sln" t="IncludeFlat" />
       <e p="Updateversion.ps1" t="Include" />

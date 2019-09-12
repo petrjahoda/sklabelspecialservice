@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -15,10 +15,11 @@ using Microsoft.Extensions.Logging;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using static System.Console;
+using System.Data.SqlClient;
 
 namespace sklabelspecialservice {
     internal static class Program {
-        private const string BuildDate = "2019.3.3.7";
+        private const string BuildDate = "2019.3.3.12";
         private const string DataFolder = "Logs";
         internal static string IpAddress;
         internal static string Port;
@@ -51,7 +52,8 @@ namespace sklabelspecialservice {
 
         private static void Main() {
             _systemIsActivated = false;
-            WriteLine("  >> SK LABEL SPECIAL SERVICE <<");
+            Console.WriteLine("  >> SK LABEL SPECIAL SERVICE <<");
+
             var outputPath = CreateLogFileIfNotExists("0-main.txt");
             using (CreateLogger(outputPath, out var logger)) {
                 CheckOsPlatform(logger);
@@ -348,10 +350,13 @@ namespace sklabelspecialservice {
                 while (_databaseIsOnline && _loopCanRun && _systemIsActivated) {
                     workplace.UpdateActualStateForWorkplace(logger);
                     if (workplace.ActualStateType == StateType.Running) {
-                        LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Workplace in production", logger);
+                        LogDeviceInfo($"[ {workplace.Name} ] --INF-- Workplace in production", logger);
                         var idForWorkplaceModeTypeMyti = workplace.GetWorkplaceModeTypeIdFor("Mytí", logger);
+                        LogDeviceInfo($"[ {workplace.Name} ] --INF-- Id for Myti: {idForWorkplaceModeTypeMyti}", logger);
                         var idForWorkplaceMode = workplace.GetWorkplaceModeIdFor(idForWorkplaceModeTypeMyti, logger);
+                        LogDeviceInfo($"[ {workplace.Name} ] --INF-- Id for workplace mode: {idForWorkplaceMode}", logger);
                         var openTerminalInputOrder = workplace.GetOpenTerminalInputOrderFor(idForWorkplaceMode, logger);
+                        LogDeviceInfo($"[ {workplace.Name} ] --INF-- Id for open order with workplacemode for Myti {openTerminalInputOrder}", logger);
 
                         if (openTerminalInputOrder > 0) {
                             LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Workplace has open order MYTI, processing changes...", logger);
@@ -378,7 +383,6 @@ namespace sklabelspecialservice {
                             LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Workplace has open order", logger);
                             var openIdleId = workplace.GetAnyOpenIdleIdForOrderNotSavedToK2(logger);
                             if (openIdleId > 0) {
-                                
                                 LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Workplace has open idle", logger);
                                 LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Updating order...", logger);
                                 var userId = workplace.GetUserIdFor(openTerminalInputOrderId, logger);
@@ -391,7 +395,7 @@ namespace sklabelspecialservice {
                                     workplace.SaveToK2("118", userId, orderId, logger);
                                 } else if (workplaceModeTypeName.Contains("Úklid")) {
                                     workplace.SaveToK2("119", userId, orderId, logger);
-                                } else if (workplaceModeTypeName.Contains("Příprava")) {
+                                } else if (workplaceModeTypeName.Contains("Príprava")) {
                                     workplace.SaveToK2("117", userId, orderId, logger);
                                 } else if (workplaceModeTypeName.Contains("Mytí")) {
                                     workplace.SaveToK2("120", userId, orderId, logger);
@@ -425,8 +429,6 @@ namespace sklabelspecialservice {
                 _numberOfRunningWorkplaces--;
             }
         }
-
-
 
 
         private static void CheckSystemActivation(ILogger logger) {

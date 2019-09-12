@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Data.SqlClient;
 using System.Globalization;
 using Microsoft.Extensions.Logging;
 using MySql.Data.MySqlClient;
@@ -1348,6 +1347,10 @@ namespace sklabelspecialservice {
 //        }
 //
         public void CreateOrderForWorkplace(DateTime date, int orderId, int userId, int workplaceModeId, int cavity, ILogger logger) {
+            string userToInsert = "NULL";
+            if (userId > 0) {
+                userToInsert = userId.ToString();
+            }
             int actualWorkshiftId = GetActualWorkShiftIdFor(logger);
             var dateToInsert = $"{date:yyyy-MM-dd HH:mm:ss}";
             var connection = new MySqlConnection($"server={Program.IpAddress};port={Program.Port};userid={Program.Login};password={Program.Password};database={Program.Database};");
@@ -1356,7 +1359,7 @@ namespace sklabelspecialservice {
                 var command = connection.CreateCommand();
                 command.CommandText =
                     $"INSERT INTO `zapsi2`.`terminal_input_order` (`DTS`, `DTE`, `OrderID`, `UserID`, `DeviceID`, `Interval`, `Count`, `Fail`, `AverageCycle`, `WorkerCount`, `WorkplaceModeID`, `Note`, `WorkshiftID`, `Cavity`)" +
-                    $" VALUES ('{dateToInsert}', NULL, {orderId}, {userId}, {DeviceOid}, 0, DEFAULT, DEFAULT, DEFAULT, DEFAULT, {workplaceModeId}, 'NULL', {actualWorkshiftId}, {cavity})";
+                    $" VALUES ('{dateToInsert}', NULL, {orderId}, {userToInsert}, {DeviceOid}, 0, DEFAULT, DEFAULT, DEFAULT, DEFAULT, {workplaceModeId}, 'NULL', {actualWorkshiftId}, {cavity})";
                 try {
                     command.ExecuteNonQuery();
                     LogInfo("[ " + Name + " ] --INF-- ... Order created", logger);
@@ -1547,6 +1550,7 @@ namespace sklabelspecialservice {
                 connection.Open();
                 var selectQuery = $"SELECT * from zapsi2.workplace_mode where Workplaceid={Oid} and WorkplaceModeTypeId={idForWorkplaceModeTypeMyti} limit 1";
                 var command = new MySqlCommand(selectQuery, connection);
+                Console.WriteLine(selectQuery);
                 try {
                     var reader = command.ExecuteReader();
                     if (reader.Read()) {
@@ -1964,21 +1968,23 @@ namespace sklabelspecialservice {
         }
 
         public void SaveToK2(string codeForK2, int userId, int orderId, ILogger logger) {
-            LogInfo($"[ {Name} ] --INF-- Saving {codeForK2} to K2 for orderid {orderId} and userid {userId}", logger);
             var workplaceCode = GetWorkplaceCode(logger);
             var userLogin = GetUserLoginFor(userId, logger);
             var orderName = GetOrderNameFor(orderId, logger);
             var data = "\\id_stroj{" + workplaceCode + "}\\id_osoby{" + userLogin + "}\\id_zakazky{" + orderName + "}\\id_krok{" + codeForK2 + "}\\id_operace{" + orderName + "}";
-            var commandTest =
-                $"INSERT INTO [dbo].[ZAPSI_K2] ([id_zaznamu], [cas], [typ], [data], [zprac], [cas_zprac], [error], [castrigger]) VALUES ('', GETDATE() , '200', '{data}', NULL, NULL, NULL, NULL);";
-            Console.WriteLine(commandTest);
             LogInfo($"[ {Name} ] --INF-- Saving {codeForK2} to K2 for workplace.code={workplaceCode}, order.name={orderName} and user.login={userLogin}", logger);
-            var connection = new SqlConnection {ConnectionString = $"Data Source=10.3.1.3; Initial Catalog=K2_SKLABEL; User id=zapsi; Password=DSgEEmPNxCwgTJjsd2uR;"};
+            var connection = new System.Data.SqlClient.SqlConnection {ConnectionString = "Data Source=10.3.1.3; Initial Catalog=K2_SKLABEL; User id=zapsi; Password=DSgEEmPNxCwgTJjsd2uR;"};
+            LogInfo($"[ {Name} ] --INF-- Connection string {connection.ConnectionString}", logger);
+            LogInfo($"[ {Name} ] --INF-- Printed", logger);
+
             try {
                 connection.Open();
+                LogInfo("[ MAIN ] --INF-- connection open", logger);
+
                 var command = connection.CreateCommand();
                 command.CommandText =
                     $"INSERT INTO [dbo].[ZAPSI_K2] ([id_zaznamu], [cas], [typ], [data], [zprac], [cas_zprac], [error], [castrigger]) VALUES ('', GETDATE() , '200', '{data}', NULL, NULL, NULL, NULL);";
+                LogInfo($"[ MAIN ] --INF-- {command.CommandText}", logger);
                 try {
                     command.ExecuteNonQuery();
                 } catch (Exception error) {
@@ -1989,7 +1995,7 @@ namespace sklabelspecialservice {
 
                 connection.Close();
             } catch (Exception error) {
-                LogError("[ " + Name + " ] --ERR-- Problem with database: " + error.Message, logger);
+                LogError("[ " + Name + " ] --ERR-- Problem with database K2: " + error.Message, logger);
             } finally {
                 connection.Dispose();
             }
@@ -1997,6 +2003,8 @@ namespace sklabelspecialservice {
 
         private string GetOrderNameFor(int orderId, ILogger logger) {
             var orderName = "null";
+
+
             var connection = new MySqlConnection(
                 $"server={Program.IpAddress};port={Program.Port};userid={Program.Login};password={Program.Password};database={Program.Database};");
             try {
