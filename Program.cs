@@ -19,7 +19,7 @@ using System.Data.SqlClient;
 
 namespace sklabelspecialservice {
     internal static class Program {
-        private const string BuildDate = "2019.3.3.12";
+        private const string BuildDate = "2019.4.1.1";
         private const string DataFolder = "Logs";
         internal static string IpAddress;
         internal static string Port;
@@ -357,19 +357,19 @@ namespace sklabelspecialservice {
                         LogDeviceInfo($"[ {workplace.Name} ] --INF-- Id for workplace mode: {idForWorkplaceMode}", logger);
                         var openTerminalInputOrder = workplace.GetOpenTerminalInputOrderFor(idForWorkplaceMode, logger);
                         LogDeviceInfo($"[ {workplace.Name} ] --INF-- Id for open order with workplacemode for Myti {openTerminalInputOrder}", logger);
-
-                        if (openTerminalInputOrder > 0) {
+                        bool thirtyPiecesDone = workplace.CheckIfThirtyPiecesAreDone(idForWorkplaceMode, logger);
+                        if (openTerminalInputOrder > 0 && thirtyPiecesDone) {
                             LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Workplace has open order MYTI, processing changes...", logger);
                             var userId = workplace.GetUserIdFor(openTerminalInputOrder, logger);
                             var orderId = workplace.GetOrderIdFor(openTerminalInputOrder, logger);
-                            var idForWorkplaceModeTypeTisk = workplace.GetWorkplaceModeTypeIdFor("Tisk", logger);
+                            var idForWorkplaceModeTypeTisk = workplace.GetWorkplaceModeTypeIdFor("Příprava", logger);
                             var workplaceModeId = workplace.GetWorkplaceModeIdFor(idForWorkplaceModeTypeTisk, logger);
                             var idleTime = workplace.GetIdleTimeFor(idForWorkplaceModeTypeTisk, logger);
                             var actualTime = DateTime.Now;
                             LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Closing order type Myti...", logger);
                             workplace.CloseOrderForWorkplace(actualTime, logger);
                             workplace.SaveToK2("110", userId, orderId, logger);
-                            LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Creating new order type Tisk...", logger);
+                            LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Creating new order type Priprava...", logger);
                             workplace.CreateOrderForWorkplace(actualTime, orderId, userId, workplaceModeId, 1, logger);
                             workplace.SaveToK2("102", userId, orderId, logger);
                             LogDeviceInfo($"[ {workplace.Name} ] --INF-- Updating idle time to {idleTime}...", logger);

@@ -355,6 +355,7 @@ namespace sklabelspecialservice {
             if (LastStateDateTime.CompareTo(closingDateForOrder) > 0) {
                 dateToInsert = myDate;
             }
+
             var connection = new MySqlConnection(
                 $"server={Program.IpAddress};port={Program.Port};userid={Program.Login};password={Program.Password};database={Program.Database};");
             var count = GetCountForWorkplace(logger);
@@ -375,6 +376,7 @@ namespace sklabelspecialservice {
                 } finally {
                     command.Dispose();
                 }
+
                 OrderUserId = 0;
                 connection.Close();
             } catch (Exception error) {
@@ -434,6 +436,7 @@ namespace sklabelspecialservice {
                     averageCycle = 0;
                 }
             }
+
             return averageCycle;
         }
 
@@ -1351,6 +1354,7 @@ namespace sklabelspecialservice {
             if (userId > 0) {
                 userToInsert = userId.ToString();
             }
+
             int actualWorkshiftId = GetActualWorkShiftIdFor(logger);
             var dateToInsert = $"{date:yyyy-MM-dd HH:mm:ss}";
             var connection = new MySqlConnection($"server={Program.IpAddress};port={Program.Port};userid={Program.Login};password={Program.Password};database={Program.Database};");
@@ -1539,6 +1543,7 @@ namespace sklabelspecialservice {
             } finally {
                 connection.Dispose();
             }
+
             return workplaceModeTypeId;
         }
 
@@ -1571,6 +1576,7 @@ namespace sklabelspecialservice {
             } finally {
                 connection.Dispose();
             }
+
             return workplaceModeId;
         }
 
@@ -1602,6 +1608,7 @@ namespace sklabelspecialservice {
             } finally {
                 connection.Dispose();
             }
+
             return openTerminalInputOrderId;
         }
 
@@ -1633,12 +1640,14 @@ namespace sklabelspecialservice {
             } finally {
                 connection.Dispose();
             }
+
             var userIdToreturn = 0;
             try {
                 userIdToreturn = Convert.ToInt32(userId);
             } catch (Exception e) {
                 LogError("[ " + Name + " ] --ERR-- Problem converting userid: " + userId, logger);
             }
+
             return userIdToreturn;
         }
 
@@ -1703,6 +1712,7 @@ namespace sklabelspecialservice {
             } finally {
                 connection.Dispose();
             }
+
             return idleTime;
         }
 
@@ -1759,6 +1769,7 @@ namespace sklabelspecialservice {
             } finally {
                 connection.Dispose();
             }
+
             return orderClosedAutomaticallyWhenPowerOff;
         }
 
@@ -1815,6 +1826,7 @@ namespace sklabelspecialservice {
             } finally {
                 connection.Dispose();
             }
+
             return openTerminalInputOrderId;
         }
 
@@ -1846,6 +1858,7 @@ namespace sklabelspecialservice {
             } finally {
                 connection.Dispose();
             }
+
             return openTerminalInputIdleId;
         }
 
@@ -1902,6 +1915,7 @@ namespace sklabelspecialservice {
             } finally {
                 connection.Dispose();
             }
+
             return workplaceModeId;
         }
 
@@ -1933,6 +1947,7 @@ namespace sklabelspecialservice {
             } finally {
                 connection.Dispose();
             }
+
             return workplaceModeTypeId;
         }
 
@@ -1964,6 +1979,7 @@ namespace sklabelspecialservice {
             } finally {
                 connection.Dispose();
             }
+
             return workplaceModeTypeName;
         }
 
@@ -2031,6 +2047,7 @@ namespace sklabelspecialservice {
             } finally {
                 connection.Dispose();
             }
+
             return orderName;
         }
 
@@ -2062,6 +2079,7 @@ namespace sklabelspecialservice {
             } finally {
                 connection.Dispose();
             }
+
             return userLogin;
         }
 
@@ -2093,7 +2111,50 @@ namespace sklabelspecialservice {
             } finally {
                 connection.Dispose();
             }
+
             return workplaceCode;
+        }
+
+        public bool CheckIfThirtyPiecesAreDone(int idForWorkplaceMode, ILogger logger) {
+            var thirtyPiecesAreDone = false;
+            var piecesDone = 0;
+            // get datetime for open terminal input order
+            // get true if more than 30 pieces are done
+            var connection = new MySqlConnection(
+                $"server={Program.IpAddress};port={Program.Port};userid={Program.Login};password={Program.Password};database={Program.Database};");
+            try {
+                connection.Open();
+                var selectQuery = $"SELECT * from zapsi2.terminal_input_order where DeviceId={DeviceOid} and WorkplaceModeId={idForWorkplaceMode} and DTE is null  limit 1";
+                var command = new MySqlCommand(selectQuery, connection);
+                try {
+                    var reader = command.ExecuteReader();
+                    if (reader.Read()) {
+                        piecesDone = Convert.ToInt32(reader["Count"]);
+                    }
+
+                    LogInfo("[ " + Name + " ] --INF-- Pieces done for order: " + piecesDone, logger);
+
+                    if (piecesDone > 30) {
+                        thirtyPiecesAreDone = true;
+                        LogInfo("[ " + Name + " ] --INF-- Thirty pieces done", logger);
+                    }
+
+                    reader.Close();
+                    reader.Dispose();
+                } catch (Exception error) {
+                    LogError("[ " + Name + " ] --ERR-- Problem checking open order for workplace: " + error.Message + selectQuery, logger);
+                } finally {
+                    command.Dispose();
+                }
+
+                connection.Close();
+            } catch (Exception error) {
+                LogError("[ " + Name + " ] --ERR-- Problem with database: " + error.Message, logger);
+            } finally {
+                connection.Dispose();
+            }
+
+            return thirtyPiecesAreDone;
         }
     }
 }
