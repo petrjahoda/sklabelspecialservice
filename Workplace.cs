@@ -1999,7 +1999,7 @@ namespace sklabelspecialservice {
 
                 var command = connection.CreateCommand();
                 command.CommandText =
-                    $"INSERT INTO [dbo].[ZAPSI_K2] ([id_zaznamu], [cas], [typ], [data], [zprac], [cas_zprac], [error], [castrigger]) VALUES ('', GETDATE() , '200', '{data}', NULL, NULL, NULL, NULL);";
+                    $"INSERT INTO [dbo].[ZAPSI_K2] ([id_zaznamu], [cas], [typ], [data], [zprac], [cas_zprac], [error], [castrigger]) VALUES ('', GETDATE() , '200', '{data}', 0, NULL, NULL, NULL);";
                 LogInfo($"[ MAIN ] --INF-- {command.CommandText}", logger);
                 try {
                     command.ExecuteNonQuery();
@@ -2030,7 +2030,7 @@ namespace sklabelspecialservice {
                 try {
                     var reader = command.ExecuteReader();
                     if (reader.Read()) {
-                        orderName = Convert.ToString(reader["Name"]);
+                        orderName = Convert.ToString(reader["Barcode"]);
                     }
 
                     reader.Close();
