@@ -2161,10 +2161,10 @@ namespace sklabelspecialservice {
             var portOid = GetAnalogPortForWorkplace(logger);
             var openTerminalInputOrder = GetOpenOrderForAnalogProcessing(logger);
             LogInfo("[ " + Name + " ] --INF-- Analog port OID: " + portOid, logger);
-            var count = GetCountForPort(portOid, logger);
-            LogInfo("[ " + Name + " ] --INF-- Count for open order: " + count, logger);
             var orderStartDate = GetOrderDTS(openTerminalInputOrder, logger);
             LogInfo("[ " + Name + " ] --INF-- Order start date: " + orderStartDate, logger);
+            var count = GetCountForPort(orderStartDate, portOid, logger);
+            LogInfo("[ " + Name + " ] --INF-- Count for open order: " + count, logger);
             var difference = DateTime.Now.Subtract(orderStartDate).TotalSeconds.ToString(CultureInfo.InvariantCulture);
             LogInfo("[ " + Name + " ] --INF-- Interval: " + difference, logger);
             var averageCycle = DateTime.Now.Subtract(orderStartDate).TotalSeconds / count;
@@ -2202,7 +2202,7 @@ namespace sklabelspecialservice {
                 $"server={Program.IpAddress};port={Program.Port};userid={Program.Login};password={Program.Password};database={Program.Database};");
             try {
                 connection.Open();
-                var selectQuery = $"SELECT * from zapsi2.terminal_input_order where DeviceId={DeviceOid} and and DTE is null limit 1";
+                var selectQuery = $"SELECT * from zapsi2.terminal_input_order where DeviceId={DeviceOid} and DTE is null limit 1";
                 var command = new MySqlCommand(selectQuery, connection);
                 try {
                     var reader = command.ExecuteReader();
@@ -2228,14 +2228,15 @@ namespace sklabelspecialservice {
             return openTerminalInputOrderId;
         }
 
-        private int GetCountForPort(int portOid, ILogger logger) {
-            var startDate = $"{OrderStartDate:yyyy-MM-dd HH:mm:ss.ffff}";
+        private int GetCountForPort(DateTime orderStartDate, int portOid, ILogger logger) {
+            var startDate = $"{orderStartDate:yyyy-MM-dd HH:mm:ss.ffff}";
             var count = 0;
             var connection = new MySqlConnection($"server={Program.IpAddress};port={Program.Port};userid={Program.Login};password={Program.Password};database={Program.Database};");
             try {
                 connection.Open();
-                var selectQuery = $"SELECT count(Data) as Count from zapsi2.device_input_analog where DevicePortId={portOid} and DT>'{startDate}'";
+                var selectQuery = $"SELECT sum(Data) as Count from zapsi2.device_input_analog where DevicePortId={portOid} and DT>'{startDate}'";
                 var command = new MySqlCommand(selectQuery, connection);
+                LogInfo("[ " + Name + " ] --INF-- " + command.CommandText, logger);
                 try {
                     var reader = command.ExecuteReader();
                     if (reader.Read()) {
