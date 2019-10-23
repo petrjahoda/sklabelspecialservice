@@ -2157,8 +2157,9 @@ namespace sklabelspecialservice {
             return thirtyPiecesAreDone;
         }
 
-        public void UpdateCountFromAnalog(int openTerminalInputOrder, ILogger logger) {
+        public void UpdateCountFromAnalog(ILogger logger) {
             var portOid = GetAnalogPortForWorkplace(logger);
+            var openTerminalInputOrder = GetOpenOrderForAnalogProcessing(logger);
             LogInfo("[ " + Name + " ] --INF-- Analog port OID: " + portOid, logger);
             var count = GetCountForPort(portOid, logger);
             LogInfo("[ " + Name + " ] --INF-- Count for open order: " + count, logger);
@@ -2193,6 +2194,38 @@ namespace sklabelspecialservice {
             } finally {
                 connection.Dispose();
             }
+        }
+
+        private int GetOpenOrderForAnalogProcessing(ILogger logger) {
+            var openTerminalInputOrderId = 0;
+            var connection = new MySqlConnection(
+                $"server={Program.IpAddress};port={Program.Port};userid={Program.Login};password={Program.Password};database={Program.Database};");
+            try {
+                connection.Open();
+                var selectQuery = $"SELECT * from zapsi2.terminal_input_order where DeviceId={DeviceOid} and and DTE is null limit 1";
+                var command = new MySqlCommand(selectQuery, connection);
+                try {
+                    var reader = command.ExecuteReader();
+                    if (reader.Read()) {
+                        openTerminalInputOrderId = Convert.ToInt32(reader["OID"]);
+                    }
+
+                    reader.Close();
+                    reader.Dispose();
+                } catch (Exception error) {
+                    LogError("[ " + Name + " ] --ERR-- Problem checking open order for workplace: " + error.Message + selectQuery, logger);
+                } finally {
+                    command.Dispose();
+                }
+
+                connection.Close();
+            } catch (Exception error) {
+                LogError("[ " + Name + " ] --ERR-- Problem with database: " + error.Message, logger);
+            } finally {
+                connection.Dispose();
+            }
+
+            return openTerminalInputOrderId;
         }
 
         private int GetCountForPort(int portOid, ILogger logger) {
