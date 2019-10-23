@@ -359,6 +359,7 @@ namespace sklabelspecialservice {
                         LogDeviceInfo($"[ {workplace.Name} ] --INF-- Id for open order with workplacemode for Myti {openTerminalInputOrder}", logger);
                         bool thirtyPiecesDone = workplace.CheckIfThirtyPiecesAreDone(idForWorkplaceMode, logger);
                         if (openTerminalInputOrder > 0 && thirtyPiecesDone) {
+                            workplace.UpdateCountFromAnalog(openTerminalInputOrder, logger);
                             LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Workplace has open order MYTI, processing changes...", logger);
                             var userId = workplace.GetUserIdFor(openTerminalInputOrder, logger);
                             var orderId = workplace.GetOrderIdFor(openTerminalInputOrder, logger);
@@ -374,12 +375,15 @@ namespace sklabelspecialservice {
                             workplace.SaveToK2("102", userId, orderId, logger);
                             LogDeviceInfo($"[ {workplace.Name} ] --INF-- Updating idle time to {idleTime}...", logger);
                             workplace.UpdateIdleTimeForWorkplace(idleTime, logger);
+                        } else if (openTerminalInputOrder > 0) {
+                            workplace.UpdateCountFromAnalog(openTerminalInputOrder, logger);
                         }
                         LogDeviceInfo($"[ {workplace.Name} ] --INF-- Production process done", logger);
                     } else if (workplace.ActualStateType == StateType.Idle) {
                         LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Workplace in idle", logger);
                         var openTerminalInputOrderId = workplace.GetAnyOpenTerminalInputOrderFor(logger);
                         if (openTerminalInputOrderId > 0) {
+                            workplace.UpdateCountFromAnalog(openTerminalInputOrderId, logger);
                             LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Workplace has open order", logger);
                             var openIdleId = workplace.GetAnyOpenIdleIdForOrderNotSavedToK2(logger);
                             if (openIdleId > 0) {

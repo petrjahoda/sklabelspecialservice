@@ -430,7 +430,7 @@ namespace sklabelspecialservice {
         private double GetAverageCycleForWorkplace(int count) {
             var averageCycle = 0.0;
             if (count != 0) {
-                var difference = LastStateDateTime.Subtract(OrderStartDate).TotalSeconds;
+                var difference = DateTime.Now.Subtract(OrderStartDate).TotalSeconds;
                 averageCycle = difference / count;
                 if (averageCycle < 0) {
                     averageCycle = 0;
@@ -2155,6 +2155,138 @@ namespace sklabelspecialservice {
             }
 
             return thirtyPiecesAreDone;
+        }
+
+        public void UpdateCountFromAnalog(int openTerminalInputOrder, ILogger logger) {
+            var portOid = GetAnalogPortForWorkplace(logger);
+            LogInfo("[ " + Name + " ] --INF-- Analog port OID: " + portOid, logger);
+            var count = GetCountForPort(portOid, logger);
+            LogInfo("[ " + Name + " ] --INF-- Count for open order: " + count, logger);
+            var orderStartDate = GetOrderDTS(openTerminalInputOrder, logger);
+            LogInfo("[ " + Name + " ] --INF-- Order start date: " + orderStartDate, logger);
+            var difference = DateTime.Now.Subtract(orderStartDate).TotalSeconds.ToString(CultureInfo.InvariantCulture);
+            LogInfo("[ " + Name + " ] --INF-- Interval: " + difference, logger);
+            var averageCycle = DateTime.Now.Subtract(orderStartDate).TotalSeconds / count;
+            LogInfo("[ " + Name + " ] --INF-- Average cycle: " + averageCycle, logger);
+            var averageCycleToInsert = averageCycle.ToString(CultureInfo.InvariantCulture).Replace(",", ".");
+            LogInfo("[ " + Name + " ] --INF-- Average cycle for insert: " + averageCycleToInsert, logger);
+            var connection = new MySqlConnection($"server={Program.IpAddress};port={Program.Port};userid={Program.Login};password={Program.Password};database={Program.Database};");
+            try {
+                connection.Open();
+                var command = connection.CreateCommand();
+
+                command.CommandText =
+                    $"UPDATE `zapsi2`.`terminal_input_order` t SET t.Count={count}, t.AverageCycle={averageCycleToInsert}, t.Interval={difference} WHERE t.`DTE` is NULL and DeviceID={DeviceOid}";
+                LogInfo("[ " + Name + " ] --INF-- Update query: " + command.CommandText, logger);
+
+                try {
+                    command.ExecuteNonQuery();
+                } catch (Exception error) {
+                    LogError("[ " + Name + " ] --ERR-- problem updating count order: " + error.Message + command.CommandText, logger);
+                } finally {
+                    command.Dispose();
+                }
+
+                connection.Close();
+            } catch (Exception error) {
+                LogError("[ " + Name + " ] --ERR-- Problem with database: " + error.Message, logger);
+            } finally {
+                connection.Dispose();
+            }
+        }
+
+        private int GetCountForPort(int portOid, ILogger logger) {
+            var startDate = $"{OrderStartDate:yyyy-MM-dd HH:mm:ss.ffff}";
+            var count = 0;
+            var connection = new MySqlConnection($"server={Program.IpAddress};port={Program.Port};userid={Program.Login};password={Program.Password};database={Program.Database};");
+            try {
+                connection.Open();
+                var selectQuery = $"SELECT count(Data) as Count from zapsi2.device_input_analog where DevicePortId={portOid} and DT>'{startDate}'";
+                var command = new MySqlCommand(selectQuery, connection);
+                try {
+                    var reader = command.ExecuteReader();
+                    if (reader.Read()) {
+                        count = Convert.ToInt32(reader["Count"]);
+                    }
+
+                    reader.Close();
+                    reader.Dispose();
+                } catch (Exception error) {
+                    LogError("[ " + Name + " ] --ERR-- Problem checking open order for workplace: " + error.Message + selectQuery, logger);
+                } finally {
+                    command.Dispose();
+                }
+
+                connection.Close();
+            } catch (Exception error) {
+                LogError("[ " + Name + " ] --ERR-- Problem with database: " + error.Message, logger);
+            } finally {
+                connection.Dispose();
+            }
+
+            return count;
+        }
+
+        private DateTime GetOrderDTS(int openTerminalInputOrder, ILogger logger) {
+            var orderDTS = DateTime.Now;
+            var connection = new MySqlConnection($"server={Program.IpAddress};port={Program.Port};userid={Program.Login};password={Program.Password};database={Program.Database};");
+            try {
+                connection.Open();
+                var selectQuery = $"SELECT * from zapsi2.terminal_input_order where OID={openTerminalInputOrder} limit 1";
+                var command = new MySqlCommand(selectQuery, connection);
+                try {
+                    var reader = command.ExecuteReader();
+                    if (reader.Read()) {
+                        orderDTS = Convert.ToDateTime(reader["DTS"]);
+                    }
+
+                    reader.Close();
+                    reader.Dispose();
+                } catch (Exception error) {
+                    LogError("[ " + Name + " ] --ERR-- Problem checking open order for workplace: " + error.Message + selectQuery, logger);
+                } finally {
+                    command.Dispose();
+                }
+
+                connection.Close();
+            } catch (Exception error) {
+                LogError("[ " + Name + " ] --ERR-- Problem with database: " + error.Message, logger);
+            } finally {
+                connection.Dispose();
+            }
+
+            return orderDTS;
+        }
+
+        private int GetAnalogPortForWorkplace(ILogger logger) {
+            var analogPortOid = 1;
+            var connection = new MySqlConnection($"server={Program.IpAddress};port={Program.Port};userid={Program.Login};password={Program.Password};database={Program.Database};");
+            try {
+                connection.Open();
+                var selectQuery = $"SELECT * from zapsi2.workplace_port where WorkplaceID={Oid} and HighValue=100 limit 1";
+                var command = new MySqlCommand(selectQuery, connection);
+                try {
+                    var reader = command.ExecuteReader();
+                    if (reader.Read()) {
+                        analogPortOid = Convert.ToInt32(reader["DevicePortId"]);
+                    }
+
+                    reader.Close();
+                    reader.Dispose();
+                } catch (Exception error) {
+                    LogError("[ " + Name + " ] --ERR-- Problem checking open order for workplace: " + error.Message + selectQuery, logger);
+                } finally {
+                    command.Dispose();
+                }
+
+                connection.Close();
+            } catch (Exception error) {
+                LogError("[ " + Name + " ] --ERR-- Problem with database: " + error.Message, logger);
+            } finally {
+                connection.Dispose();
+            }
+
+            return analogPortOid;
         }
     }
 }
