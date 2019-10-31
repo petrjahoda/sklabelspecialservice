@@ -2115,11 +2115,9 @@ namespace sklabelspecialservice {
             return workplaceCode;
         }
 
-        public bool CheckIfThirtyPiecesAreDone(int idForWorkplaceMode, ILogger logger) {
-            var thirtyPiecesAreDone = false;
+        public bool CheckIfHundreadPiecesAreDone(int idForWorkplaceMode, ILogger logger) {
+            var hundreadPiecesAreDone = false;
             var piecesDone = 0;
-            // get datetime for open terminal input order
-            // get true if more than 30 pieces are done
             var connection = new MySqlConnection(
                 $"server={Program.IpAddress};port={Program.Port};userid={Program.Login};password={Program.Password};database={Program.Database};");
             try {
@@ -2134,9 +2132,9 @@ namespace sklabelspecialservice {
 
                     LogInfo("[ " + Name + " ] --INF-- Pieces done for order: " + piecesDone, logger);
 
-                    if (piecesDone > 30) {
-                        thirtyPiecesAreDone = true;
-                        LogInfo("[ " + Name + " ] --INF-- Thirty pieces done", logger);
+                    if (piecesDone > 99) {
+                        hundreadPiecesAreDone = true;
+                        LogInfo("[ " + Name + " ] --INF-- Hundread pieces done", logger);
                     }
 
                     reader.Close();
@@ -2154,7 +2152,7 @@ namespace sklabelspecialservice {
                 connection.Dispose();
             }
 
-            return thirtyPiecesAreDone;
+            return hundreadPiecesAreDone;
         }
 
         public void UpdateCountFromAnalog(ILogger logger) {

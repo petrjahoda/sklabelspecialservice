@@ -358,8 +358,8 @@ namespace sklabelspecialservice {
                         LogDeviceInfo($"[ {workplace.Name} ] --INF-- Id for workplace mode: {idForWorkplaceMode}", logger);
                         var openTerminalInputOrder = workplace.GetOpenTerminalInputOrderFor(idForWorkplaceMode, logger);
                         LogDeviceInfo($"[ {workplace.Name} ] --INF-- Id for open order with workplacemode for Myti {openTerminalInputOrder}", logger);
-                        bool thirtyPiecesDone = workplace.CheckIfThirtyPiecesAreDone(idForWorkplaceMode, logger);
-                        if (openTerminalInputOrder > 0 && thirtyPiecesDone) {
+                        bool hundreadPiecesDone = workplace.CheckIfHundreadPiecesAreDone(idForWorkplaceMode, logger);
+                        if (openTerminalInputOrder > 0 && hundreadPiecesDone) {
                             LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Workplace has open order MYTI, processing changes...", logger);
                             var userId = workplace.GetUserIdFor(openTerminalInputOrder, logger);
                             var orderId = workplace.GetOrderIdFor(openTerminalInputOrder, logger);
