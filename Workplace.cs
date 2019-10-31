@@ -2166,6 +2166,10 @@ namespace sklabelspecialservice {
             var difference = DateTime.Now.Subtract(orderStartDate).TotalSeconds.ToString(CultureInfo.InvariantCulture);
             LogInfo("[ " + Name + " ] --INF-- Interval: " + difference, logger);
             var averageCycle = DateTime.Now.Subtract(orderStartDate).TotalSeconds / count;
+            if (double.IsInfinity(averageCycle)) {
+                averageCycle = 0.0;
+            }
+
             LogInfo("[ " + Name + " ] --INF-- Average cycle: " + averageCycle, logger);
             var averageCycleToInsert = averageCycle.ToString(CultureInfo.InvariantCulture).Replace(",", ".");
             LogInfo("[ " + Name + " ] --INF-- Average cycle for insert: " + averageCycleToInsert, logger);
