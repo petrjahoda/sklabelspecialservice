@@ -351,14 +351,15 @@ namespace sklabelspecialservice {
                 while (_databaseIsOnline && _loopCanRun && _systemIsActivated) {
                     workplace.UpdateActualStateForWorkplace(logger);
                     if (workplace.ActualStateType == StateType.Running) {
-                        var workplaceHasActiveIdle = workplace.CheckIfWorkplaceHasActivedIdle(logger);
-                        if (workplaceHasActiveIdle) {
-                            LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Closing idle", logger);
+                        LogDeviceInfo($"[ {workplace.Name} ] --INF-- Workplace in production", logger);
+                        var workplaceHasStandardIdleOpened = workplace.CheckIfWorkplaceHasOpenStandardIdle(logger);
+                        if (workplaceHasStandardIdleOpened) {
+                            LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Standard idle opened, closing idle", logger);
                             var actualDate = DateTime.Now;
                             workplace.CloseIdleForWorkplace(actualDate, logger);
                             LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Terminal_input_idle closed", logger);
                         }
-                        LogDeviceInfo($"[ {workplace.Name} ] --INF-- Workplace in production", logger);
+
                         var idForWorkplaceModeTypeMyti = workplace.GetWorkplaceModeTypeIdFor("Mytí", logger);
                         LogDeviceInfo($"[ {workplace.Name} ] --INF-- Id for Myti: {idForWorkplaceModeTypeMyti}", logger);
                         var idForWorkplaceMode = workplace.GetWorkplaceModeIdFor(idForWorkplaceModeTypeMyti, logger);
@@ -388,15 +389,14 @@ namespace sklabelspecialservice {
                         LogDeviceInfo($"[ {workplace.Name} ] --INF-- Production process done", logger);
                     } else if (workplace.ActualStateType == StateType.Idle) {
                         LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Workplace in idle", logger);
-                        var workplaceHasActiveIdle = workplace.CheckIfWorkplaceHasActivedIdle(logger);
+                        var workplaceHasActiveIdle = workplace.CheckIfWorkplaceHasOpenIdle(logger);
                         if (!workplaceHasActiveIdle) {
                             var actualDate = DateTime.Now;
-
-                            LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Creating idle", logger);
+                            LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Terminal idle not present, creating idle", logger);
                             workplace.CreateIdleForWorkplace(logger, true, actualDate);
                             LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Terminal_input_idle created", logger);
                         }
-                        
+
                         var openTerminalInputOrderId = workplace.GetAnyOpenTerminalInputOrderFor(logger);
                         if (openTerminalInputOrderId > 0) {
                             LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Workplace has open order", logger);

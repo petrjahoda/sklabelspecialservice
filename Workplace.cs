@@ -2383,7 +2383,7 @@ namespace sklabelspecialservice {
 
             LogInfo("[ " + Name + " ] --INF-- Terminal_input_idle closed", logger);
         }
-        
+
         private string DownloadFromLoginTable(ILogger logger) {
             var userIdFromLoginTable = "0";
             if (Program.DatabaseType.Equals("mysql")) {
@@ -2512,20 +2512,41 @@ namespace sklabelspecialservice {
             }
         }
 
-        public bool CheckIfWorkplaceHasActivedIdle(ILogger logger) {
-            var workplaceHasActiveIdle = false;
-            if (Program.DatabaseType.Equals("mysql")) {
-                var connection = new MySqlConnection(
-                    $"server={Program.IpAddress};port={Program.Port};userid={Program.Login};password={Program.Password};database={Program.Database};");
+        public bool CheckIfWorkplaceHasOpenStandardIdle(ILogger logger) {
+            var workplaceHasStandardOpenIdle = false;
+            var idleIsOpen = false;
+            var connection = new MySqlConnection(
+                $"server={Program.IpAddress};port={Program.Port};userid={Program.Login};password={Program.Password};database={Program.Database};");
+            try {
+                connection.Open();
+                var selectQuery = $"SELECT * from zapsi2.terminal_input_idle where DTE is null and  DeviceID={DeviceOid}";
+                var command = new MySqlCommand(selectQuery, connection);
                 try {
-                    connection.Open();
-                    var selectQuery = $"SELECT * from zapsi2.terminal_input_idle where DTE is null and  DeviceID={DeviceOid}";
-                    var command = new MySqlCommand(selectQuery, connection);
+                    var reader = command.ExecuteReader();
+                    if (reader.Read()) {
+                        WorkplaceIdleId = Convert.ToInt32(reader["IdleID"]);
+                        workplaceHasStandardOpenIdle = true;
+                        idleIsOpen = true;
+                    }
+
+                    reader.Close();
+                    reader.Dispose();
+                } catch (Exception error) {
+                    LogError("[ " + Name + " ] --ERR-- Problem checking active idle: " + error.Message + selectQuery, logger);
+                } finally {
+                    command.Dispose();
+                }
+
+                if (idleIsOpen) {
+                    selectQuery = $"SELECT * from zapsi2.idle where OID ={WorkplaceIdleId}";
+                    command = new MySqlCommand(selectQuery, connection);
                     try {
                         var reader = command.ExecuteReader();
                         if (reader.Read()) {
-                            WorkplaceIdleId = Convert.ToInt32(reader["IdleID"]);
-                            workplaceHasActiveIdle = true;
+                            var idleTypeId = Convert.ToInt32(reader["IdleTypeID"]);
+                            if (idleTypeId == 101) {
+                                workplaceHasStandardOpenIdle = false;
+                            }
                         }
 
                         reader.Close();
@@ -2535,44 +2556,49 @@ namespace sklabelspecialservice {
                     } finally {
                         command.Dispose();
                     }
-
-                    connection.Close();
-                } catch (Exception error) {
-                    LogError("[ " + Name + " ] --ERR-- Problem with database: " + error.Message, logger);
-                } finally {
-                    connection.Dispose();
                 }
-            } else if (Program.DatabaseType.Equals("sqlserver")) {
-                var connection = new SqlConnection
-                    {ConnectionString = $"Data Source={Program.IpAddress}; Initial Catalog={Program.Database}; User id={Program.Login}; Password={Program.Password};"};
 
-                try {
-                    connection.Open();
-                    var selectQuery = $"SELECT * from dbo.[terminal_input_idle] where DTE is NULL and  DeviceID={DeviceOid}";
-                    var command = new SqlCommand(selectQuery, connection);
-                    try {
-                        var reader = command.ExecuteReader();
-                        if (reader.Read()) {
-                            workplaceHasActiveIdle = true;
-                        }
-
-                        reader.Close();
-                        reader.Dispose();
-                    } catch (Exception error) {
-                        LogError("[ " + Name + " ] --ERR-- Problem checking active idle: " + error.Message + selectQuery, logger);
-                    } finally {
-                        command.Dispose();
-                    }
-
-                    connection.Close();
-                } catch (Exception error) {
-                    LogError("[ " + Name + " ] --ERR-- Problem with database: " + error.Message, logger);
-                } finally {
-                    connection.Dispose();
-                }
+                connection.Close();
+            } catch (Exception error) {
+                LogError("[ " + Name + " ] --ERR-- Problem with database: " + error.Message, logger);
+            } finally {
+                connection.Dispose();
             }
 
-            return workplaceHasActiveIdle;
+            return workplaceHasStandardOpenIdle;
+        }
+
+        public bool CheckIfWorkplaceHasOpenIdle(ILogger logger) {
+            var workplaceHasStandardOpenIdle = false;
+            var connection = new MySqlConnection(
+                $"server={Program.IpAddress};port={Program.Port};userid={Program.Login};password={Program.Password};database={Program.Database};");
+            try {
+                connection.Open();
+                var selectQuery = $"SELECT * from zapsi2.terminal_input_idle where DTE is null and  DeviceID={DeviceOid}";
+                var command = new MySqlCommand(selectQuery, connection);
+                try {
+                    var reader = command.ExecuteReader();
+                    if (reader.Read()) {
+                        WorkplaceIdleId = Convert.ToInt32(reader["IdleID"]);
+                        workplaceHasStandardOpenIdle = true;
+                    }
+
+                    reader.Close();
+                    reader.Dispose();
+                } catch (Exception error) {
+                    LogError("[ " + Name + " ] --ERR-- Problem checking active idle: " + error.Message + selectQuery, logger);
+                } finally {
+                    command.Dispose();
+                }
+
+                connection.Close();
+            } catch (Exception error) {
+                LogError("[ " + Name + " ] --ERR-- Problem with database: " + error.Message, logger);
+            } finally {
+                connection.Dispose();
+            }
+
+            return workplaceHasStandardOpenIdle;
         }
     }
 }
