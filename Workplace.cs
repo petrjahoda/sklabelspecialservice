@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data.SqlClient;
 using System.Globalization;
 using Microsoft.Extensions.Logging;
 using MySql.Data.MySqlClient;
@@ -2323,6 +2324,255 @@ namespace sklabelspecialservice {
             }
 
             return analogPortOid;
+        }
+
+        public void CloseIdleForWorkplace(DateTime dateTimeToInsert, ILogger logger) {
+            var dateToInsert = string.Format("{0:yyyy-MM-dd HH:mm:ss}", DateTime.Now);
+
+            if (Program.DatabaseType.Equals("mysql")) {
+                var connection = new MySqlConnection(
+                    $"server={Program.IpAddress};port={Program.Port};userid={Program.Login};password={Program.Password};database={Program.Database};");
+                try {
+                    connection.Open();
+                    var command = connection.CreateCommand();
+
+
+                    command.CommandText =
+                        $"UPDATE `zapsi2`.`terminal_input_idle` t SET t.`DTE` = '{dateToInsert}', t.Interval = TIME_TO_SEC(timediff('{dateToInsert}', DTS)) WHERE t.`DTE` is NULL and DeviceID={DeviceOid}";
+                    try {
+                        command.ExecuteNonQuery();
+                    } catch (Exception error) {
+                        LogError("[ MAIN ] --ERR-- problem closing idle in database: " + error.Message + command.CommandText, logger);
+                    } finally {
+                        command.Dispose();
+                    }
+
+                    connection.Close();
+                } catch (Exception error) {
+                    LogError("[ " + Name + " ] --ERR-- Problem with database: " + error.Message, logger);
+                } finally {
+                    connection.Dispose();
+                }
+            } else if (Program.DatabaseType.Equals("sqlserver")) {
+                var connection = new SqlConnection
+                    {ConnectionString = $"Data Source={Program.IpAddress}; Initial Catalog={Program.Database}; User id={Program.Login}; Password={Program.Password};"};
+
+                try {
+                    connection.Open();
+                    var command = connection.CreateCommand();
+
+
+                    command.CommandText =
+                        $"UPDATE [dbo].[terminal_input_idle] SET [DTE] = '{dateToInsert}', [Interval] = (datediff(second, DTS, '{dateToInsert}')) WHERE [DTE] is NULL and DeviceID={DeviceOid}";
+                    try {
+                        command.ExecuteNonQuery();
+                    } catch (Exception error) {
+                        LogError("[ MAIN ] --ERR-- problem closing idle in database: " + error.Message + command.CommandText, logger);
+                    } finally {
+                        command.Dispose();
+                    }
+
+                    connection.Close();
+                } catch (Exception error) {
+                    LogError("[ " + Name + " ] --ERR-- Problem with database: " + error.Message, logger);
+                } finally {
+                    connection.Dispose();
+                }
+            }
+
+
+            LogInfo("[ " + Name + " ] --INF-- Terminal_input_idle closed", logger);
+        }
+        
+        private string DownloadFromLoginTable(ILogger logger) {
+            var userIdFromLoginTable = "0";
+            if (Program.DatabaseType.Equals("mysql")) {
+                var connection = new MySqlConnection(
+                    $"server={Program.IpAddress};port={Program.Port};userid={Program.Login};password={Program.Password};database={Program.Database};");
+                try {
+                    connection.Open();
+                    var selectQuery = $"SELECT * from zapsi2.terminal_input_login where DTE is NULL and DeviceID={DeviceOid}";
+                    var command = new MySqlCommand(selectQuery, connection);
+                    try {
+                        var reader = command.ExecuteReader();
+                        if (reader.Read()) {
+                            userIdFromLoginTable = Convert.ToString(reader["UserID"]);
+                        }
+
+                        reader.Close();
+                        reader.Dispose();
+                    } catch (Exception error) {
+                        LogError("[ " + Name + " ] --ERR-- Problem checking active order: " + error.Message + selectQuery, logger);
+                    } finally {
+                        command.Dispose();
+                    }
+
+                    connection.Close();
+                } catch (Exception error) {
+                    LogError("[ " + Name + " ] --ERR-- Problem with database: " + error.Message, logger);
+                } finally {
+                    connection.Dispose();
+                }
+            } else if (Program.DatabaseType.Equals("sqlserver")) {
+                var connection = new SqlConnection
+                    {ConnectionString = $"Data Source={Program.IpAddress}; Initial Catalog={Program.Database}; User id={Program.Login}; Password={Program.Password};"};
+
+                try {
+                    connection.Open();
+                    var selectQuery = $"SELECT * from dbo.terminal_input_login where DTE is null and DeviceID={DeviceOid}";
+                    var command = new SqlCommand(selectQuery, connection);
+                    try {
+                        var reader = command.ExecuteReader();
+                        if (reader.Read()) {
+                            userIdFromLoginTable = Convert.ToString(reader["UserID"]);
+                        }
+
+                        reader.Close();
+                        reader.Dispose();
+                    } catch (Exception error) {
+                        LogError("[ " + Name + " ] --ERR-- Problem checking active order: " + error.Message + selectQuery, logger);
+                    } finally {
+                        command.Dispose();
+                    }
+
+                    connection.Close();
+                } catch (Exception error) {
+                    LogError("[ " + Name + " ] --ERR-- Problem with database: " + error.Message, logger);
+                } finally {
+                    connection.Dispose();
+                }
+            }
+
+            return userIdFromLoginTable;
+        }
+
+        public void CreateIdleForWorkplace(ILogger logger, bool workplaceHasActiveOrder, DateTime dateTimeToInsert) {
+            var myDate = string.Format("{0:yyyy-MM-dd HH:mm:ss}", dateTimeToInsert);
+            var idleOidToInsert = 2;
+            var userIdToInsert = "";
+            if (workplaceHasActiveOrder) {
+                idleOidToInsert = 1;
+                userIdToInsert = OrderUserId.ToString();
+            }
+
+            if (userIdToInsert.Length == 0) {
+                userIdToInsert = DownloadFromLoginTable(logger);
+            }
+
+            if (userIdToInsert.Equals("0") || userIdToInsert.Length == 0) {
+                userIdToInsert = "NULL";
+            }
+
+            if (Program.DatabaseType.Equals("mysql")) {
+                var connection = new MySqlConnection($"server={Program.IpAddress};port={Program.Port};userid={Program.Login};password={Program.Password};database={Program.Database};");
+                try {
+                    connection.Open();
+                    var command = connection.CreateCommand();
+                    command.CommandText =
+                        $"INSERT INTO `zapsi2`.`terminal_input_idle` (`DTS`, `DTE`, `IdleID`, `UserID`, `Interval`, `DeviceID`, `Note`) VALUES ('{myDate}', NULL , {idleOidToInsert}, {userIdToInsert}, 0, {DeviceOid}, 'Automatic idle')";
+
+                    try {
+                        command.ExecuteNonQuery();
+                    } catch (Exception error) {
+                        LogError("[ MAIN ] --ERR-- problem inserting idle into database: " + error.Message + command.CommandText, logger);
+                    } finally {
+                        command.Dispose();
+                    }
+
+                    connection.Close();
+                } catch (Exception error) {
+                    LogError("[ " + Name + " ] --ERR-- Problem with database: " + error.Message, logger);
+                } finally {
+                    connection.Dispose();
+                }
+            } else if (Program.DatabaseType.Equals("sqlserver")) {
+                var connection = new SqlConnection
+                    {ConnectionString = $"Data Source={Program.IpAddress}; Initial Catalog={Program.Database}; User id={Program.Login}; Password={Program.Password};"};
+
+                try {
+                    connection.Open();
+                    var command = connection.CreateCommand();
+
+                    command.CommandText =
+                        $"INSERT INTO [dbo].[terminal_input_idle] ([DTS], [DTE], [IdleID], [UserID], [Interval], [DeviceID], [Note]) VALUES ('{myDate}', NULL , {idleOidToInsert}, {userIdToInsert}, 0, {DeviceOid}, 'Automatic idle')";
+                    try {
+                        command.ExecuteNonQuery();
+                    } catch (Exception error) {
+                        LogError("[ MAIN ] --ERR-- problem inserting idle into database: " + error.Message + command.CommandText, logger);
+                    } finally {
+                        command.Dispose();
+                    }
+
+                    connection.Close();
+                } catch (Exception error) {
+                    LogError("[ " + Name + " ] --ERR-- Problem with database: " + error.Message, logger);
+                } finally {
+                    connection.Dispose();
+                }
+            }
+        }
+
+        public bool CheckIfWorkplaceHasActivedIdle(ILogger logger) {
+            var workplaceHasActiveIdle = false;
+            if (Program.DatabaseType.Equals("mysql")) {
+                var connection = new MySqlConnection(
+                    $"server={Program.IpAddress};port={Program.Port};userid={Program.Login};password={Program.Password};database={Program.Database};");
+                try {
+                    connection.Open();
+                    var selectQuery = $"SELECT * from zapsi2.terminal_input_idle where DTE is null and  DeviceID={DeviceOid}";
+                    var command = new MySqlCommand(selectQuery, connection);
+                    try {
+                        var reader = command.ExecuteReader();
+                        if (reader.Read()) {
+                            WorkplaceIdleId = Convert.ToInt32(reader["IdleID"]);
+                            workplaceHasActiveIdle = true;
+                        }
+
+                        reader.Close();
+                        reader.Dispose();
+                    } catch (Exception error) {
+                        LogError("[ " + Name + " ] --ERR-- Problem checking active idle: " + error.Message + selectQuery, logger);
+                    } finally {
+                        command.Dispose();
+                    }
+
+                    connection.Close();
+                } catch (Exception error) {
+                    LogError("[ " + Name + " ] --ERR-- Problem with database: " + error.Message, logger);
+                } finally {
+                    connection.Dispose();
+                }
+            } else if (Program.DatabaseType.Equals("sqlserver")) {
+                var connection = new SqlConnection
+                    {ConnectionString = $"Data Source={Program.IpAddress}; Initial Catalog={Program.Database}; User id={Program.Login}; Password={Program.Password};"};
+
+                try {
+                    connection.Open();
+                    var selectQuery = $"SELECT * from dbo.[terminal_input_idle] where DTE is NULL and  DeviceID={DeviceOid}";
+                    var command = new SqlCommand(selectQuery, connection);
+                    try {
+                        var reader = command.ExecuteReader();
+                        if (reader.Read()) {
+                            workplaceHasActiveIdle = true;
+                        }
+
+                        reader.Close();
+                        reader.Dispose();
+                    } catch (Exception error) {
+                        LogError("[ " + Name + " ] --ERR-- Problem checking active idle: " + error.Message + selectQuery, logger);
+                    } finally {
+                        command.Dispose();
+                    }
+
+                    connection.Close();
+                } catch (Exception error) {
+                    LogError("[ " + Name + " ] --ERR-- Problem with database: " + error.Message, logger);
+                } finally {
+                    connection.Dispose();
+                }
+            }
+
+            return workplaceHasActiveIdle;
         }
     }
 }
