@@ -356,18 +356,20 @@ namespace sklabelspecialservice {
                     var idForWorkplaceModeTisk = workplace.GetWorkplaceModeIdFor(idForWorkplaceModeTypeTisk, logger);
                     var idForWorkplaceModePriprava = workplace.GetWorkplaceModeIdFor(idForWorkplaceModeTypePriprava, logger);
                     var idForWorkplaceModeUklid = workplace.GetWorkplaceModeIdFor(idForWorkplaceModeTypeUklid, logger);
+
+
                     if (workplace.ActualStateType == StateType.Running) {
                         LogDeviceInfo($"[ {workplace.Name} ] --INF-- Workplace in production", logger);
                         var specialIdleOpened = workplace.CheckIfWorkplaceHasSpecialIdleOpened(logger);
                         if (specialIdleOpened) {
                             LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Special idle opened, doing nothing", logger);
                         } else {
-                            LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Standard idle opened, checking for note Myti", logger);
+                            LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Non-special idle opened, checking for note Myti", logger);
                             var idleHasNoteMyti = workplace.CheckIfWorkplaceHasNoteMyti(logger);
                             if (idleHasNoteMyti) {
                                 LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Idle has note Myti, closing idle, creating idle Myti", logger);
                                 workplace.CloseIdleForWorkplace(DateTime.Now, logger);
-                                workplace.CreateIdleForWorkplace(logger, true, DateTime.Now);
+                                workplace.CreateIdleMytiForWorkplace(logger, true, DateTime.Now);
                                 var openTerminalInputOrder = workplace.GetOpenTerminalInputOrderFor(idForWorkplaceModePriprava, logger);
                                 if (openTerminalInputOrder == 0) {
                                     LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Open order is NOT type Priprava", logger);
@@ -435,10 +437,18 @@ namespace sklabelspecialservice {
                     } else if (workplace.ActualStateType == StateType.Idle) {
                         LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Workplace in idle", logger);
                         var workplaceHasActiveIdle = workplace.CheckIfWorkplaceHasOpenIdle(logger);
-                        if (!workplaceHasActiveIdle) {
+                        if (workplaceHasActiveIdle) {
+                            LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Terminal idle opened, doing nothing", logger);
+                        } else {
                             var actualDate = DateTime.Now;
-                            LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Terminal idle not present, creating idle", logger);
-                            workplace.CreateIdleForWorkplace(logger, true, actualDate);
+                            LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Terminal idle not opened, creating idle", logger);
+                            var openTerminalInputOrder = workplace.CheckOpenTerminalInputOrder(logger);
+                            if (openTerminalInputOrder) {
+                                workplace.CreateIdleInternalForWorkplace(logger, true, actualDate);
+                            } else {
+                                workplace.CreateIdleInternalForWorkplace(logger, false, actualDate);
+                            }
+
                             LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Terminal_input_idle created", logger);
                         }
 
@@ -449,6 +459,8 @@ namespace sklabelspecialservice {
                         if (openInternalIdle) {
                             LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Internal idle opened, closing", logger);
                             workplace.CloseIdleForWorkplace(DateTime.Now, logger);
+                        } else {
+                            LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Internal idle NOT opened, doing nothing", logger);
                         }
                     }
 
