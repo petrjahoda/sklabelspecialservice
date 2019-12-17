@@ -10,6 +10,7 @@
       <e p="bin" t="ExcludeRecursive" />
       <e p="Config.cs" t="Include" />
       <e p="create_latest.ps1" t="Include" />
+      <e p="description.txt" t="Include" />
       <e p="dockerfile" t="Include" />
       <e p="obj" t="ExcludeRecursive">
         <e p="Debug" t="Include">

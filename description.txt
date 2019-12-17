@@ -1,0 +1,33 @@
+PROGRAM PRIMARNE KONTROLUJE STAV PRACOVISTE (Produkce, prostoj nebu vypnuto, v grafech zelene, oranzove a cervene)
+
+(V textu A -> znaci ANO a N -> znaci NE)
+
+1. pokud je stav PRODUKCE
+	1.1. je otevren prostoj ktery je ve skupine neprerusitelne?
+		A -> neprovadi se zadna akce
+		N -> Ma tento prostoj v poznamce text znamenajici “Myti”?
+			A -> Ukonci prostoj, zaloz prostoj Myti a uloz data do K2
+				K117 a K110 v režimu příprava
+				K118 a K114 v režimu tisk
+			N -> Je prostoj interni (OID1 nebo OID2)?
+				A -> Ukonci prostoj
+				N -> Ukonci prostoj a uloz data do K2
+					K117 v režimu příprava
+					K118 v režimu tisk
+					K119 v režimu úklid
+	1.2. je otevrena zakazka?
+		A -> aktualizuj data k zakazce ze vstupu device_port.PortNumber=“120” (enkoder)
+
+
+2. pokud je stav PROSTOJ
+	1.1. je otevren prostoj?
+		A -> neprovadi se zadna akce
+		N -> zaloz interni prostoj
+	1.2. je otevrena zakazka?
+		A -> aktualizuj data k zakazce ze vstupu device_port.PortNumber=“120” (enkoder)
+
+
+
+3. pokud je stav VYPNUTO
+	1.1. je otevren interni prostoj (OID1 nebo OID2)?
+		A -> ukonci ho
