@@ -164,7 +164,6 @@ namespace sklabelspecialservice {
                 connection.Open();
                 var selectQuery = $"SELECT * from zapsi2.workplace_mode where Workplaceid={Oid} and WorkplaceModeTypeId={idForWorkplaceModeTypeMyti} limit 1";
                 var command = new MySqlCommand(selectQuery, connection);
-                Console.WriteLine(selectQuery);
                 try {
                     var reader = command.ExecuteReader();
                     if (reader.Read()) {
@@ -301,16 +300,13 @@ namespace sklabelspecialservice {
             LogInfo($"[ {Name} ] --INF-- Saving {codeForK2} to K2 for workplace.code={workplaceCode}, order.name={orderName} and user.login={userLogin}", logger);
             var connection = new SqlConnection {ConnectionString = "Data Source=10.3.1.3; Initial Catalog=K2_SKLABEL; User id=zapsi; Password=DSgEEmPNxCwgTJjsd2uR;"};
             LogInfo($"[ {Name} ] --INF-- Connection string {connection.ConnectionString}", logger);
-            LogInfo($"[ {Name} ] --INF-- Printed", logger);
-
             try {
                 connection.Open();
                 LogInfo("[ MAIN ] --INF-- connection open", logger);
 
                 var command = connection.CreateCommand();
                 command.CommandText =
-                    $"INSERT INTO [dbo].[ZAPSI_K2] ([id_zaznamu], [cas], [typ], [data], [zprac], [cas_zprac], [error], [castrigger]) VALUES ('', GETDATE() , '200', '{data}', 0, NULL, NULL, NULL);";
-                LogInfo($"[ MAIN ] --INF-- {command.CommandText}", logger);
+                    $"INSERT INTO [dbo].[ZAPSI_K2] ([cas], [typ], [data], [zprac], [cas_zprac], [error], [castrigger]) VALUES (GETDATE() , '200', '{data}', 0, NULL, NULL, NULL);";
                 try {
                     command.ExecuteNonQuery();
                 } catch (Exception error) {
@@ -450,7 +446,6 @@ namespace sklabelspecialservice {
 
                 command.CommandText =
                     $"UPDATE `zapsi2`.`terminal_input_order` t SET t.Count={count}, t.AverageCycle={averageCycleToInsert}, t.Interval={difference} WHERE t.`DTE` is NULL and DeviceID={DeviceOid}";
-                LogInfo("[ " + Name + " ] --INF-- Update query: " + command.CommandText, logger);
 
                 try {
                     command.ExecuteNonQuery();
@@ -509,7 +504,6 @@ namespace sklabelspecialservice {
                 connection.Open();
                 var selectQuery = $"SELECT sum(Data) as Count from zapsi2.device_input_analog where DevicePortId={portOid} and DT>'{startDate}'";
                 var command = new MySqlCommand(selectQuery, connection);
-                LogInfo("[ " + Name + " ] --INF-- " + command.CommandText, logger);
                 try {
                     var reader = command.ExecuteReader();
                     if (reader.Read()) {
@@ -576,7 +570,7 @@ namespace sklabelspecialservice {
                 try {
                     var reader = command.ExecuteReader();
                     if (reader.Read()) {
-                        analogPortOid = Convert.ToInt32(reader["DevicePortId"]);
+                        analogPortOid = Convert.ToInt32(reader["OID"]);
                     }
 
                     reader.Close();
@@ -628,7 +622,7 @@ namespace sklabelspecialservice {
         }
 
         private string DownloadFromLoginTable(ILogger logger) {
-            var userIdFromLoginTable = "0";
+            var userIdFromLoginTable = "NULL";
             var connection = new MySqlConnection($"server={Program.IpAddress};port={Program.Port};userid={Program.Login};password={Program.Password};database={Program.Database};");
             try {
                 connection.Open();
@@ -911,6 +905,37 @@ namespace sklabelspecialservice {
             }
 
             return workplaceHasOpenedOrder;
+        }
+
+        public bool CheckIfWorkplaceHasNormalIdleOpened(ILogger logger) {
+            var normalIdleOpened = false;
+            var connection = new MySqlConnection($"server={Program.IpAddress};port={Program.Port};userid={Program.Login};password={Program.Password};database={Program.Database};");
+            try {
+                connection.Open();
+                var selectQuery = $"SELECT * from zapsi2.terminal_input_idle where DTE is null and DeviceID={DeviceOid}";
+                var command = new MySqlCommand(selectQuery, connection);
+                try {
+                    var reader = command.ExecuteReader();
+                    if (reader.Read()) {
+                        normalIdleOpened = true;
+                    }
+
+                    reader.Close();
+                    reader.Dispose();
+                } catch (Exception error) {
+                    LogError("[ " + Name + " ] --ERR-- Problem checking active idle: " + error.Message + selectQuery, logger);
+                } finally {
+                    command.Dispose();
+                }
+
+                connection.Close();
+            } catch (Exception error) {
+                LogError("[ " + Name + " ] --ERR-- Problem with database: " + error.Message, logger);
+            } finally {
+                connection.Dispose();
+            }
+
+            return normalIdleOpened;
         }
     }
 }

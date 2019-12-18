@@ -18,7 +18,7 @@ using static System.Console;
 
 namespace sklabelspecialservice {
     internal static class Program {
-        private const string BuildDate = "2019.4.1.1";
+        private const string BuildDate = "2019.4.3.17";
         private const string DataFolder = "Logs";
         internal static string IpAddress;
         internal static string Port;
@@ -361,9 +361,10 @@ namespace sklabelspecialservice {
                     if (workplace.ActualStateType == StateType.Running) {
                         LogDeviceInfo($"[ {workplace.Name} ] --INF-- Workplace in production", logger);
                         var specialIdleOpened = workplace.CheckIfWorkplaceHasSpecialIdleOpened(logger);
+                        var normalIdleOpened = workplace.CheckIfWorkplaceHasNormalIdleOpened(logger);
                         if (specialIdleOpened) {
                             LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Special idle opened, doing nothing", logger);
-                        } else {
+                        } else if (normalIdleOpened) {
                             LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Non-special idle opened, checking for note Myti", logger);
                             var idleHasNoteMyti = workplace.CheckIfWorkplaceHasNoteMyti(logger);
                             if (idleHasNoteMyti) {
@@ -392,7 +393,7 @@ namespace sklabelspecialservice {
                                     workplace.SaveToK2("114", userId, orderId, logger);
                                 }
                             } else {
-                                LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Idle does NOT have note Myti, checking id idle is internal", logger);
+                                LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Idle does NOT have note Myti, checking if idle is internal", logger);
                                 var idleIsInternal = workplace.CheckIfWorkplaceIdleIsInternal(logger);
                                 if (idleIsInternal) {
                                     LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Idle is internal, closing idle", logger);
