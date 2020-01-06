@@ -18,7 +18,7 @@ using static System.Console;
 
 namespace sklabelspecialservice {
     internal static class Program {
-        private const string BuildDate = "2019.4.3.17";
+        private const string BuildDate = "2020.1.1.6";
         private const string DataFolder = "Logs";
         internal static string IpAddress;
         internal static string Port;
@@ -356,10 +356,10 @@ namespace sklabelspecialservice {
                     var idForWorkplaceModeTisk = workplace.GetWorkplaceModeIdFor(idForWorkplaceModeTypeTisk, logger);
                     var idForWorkplaceModePriprava = workplace.GetWorkplaceModeIdFor(idForWorkplaceModeTypePriprava, logger);
                     var idForWorkplaceModeUklid = workplace.GetWorkplaceModeIdFor(idForWorkplaceModeTypeUklid, logger);
+                    var devicePortIdIsOne = workplace.CheckIfDevicePortIdIsOne(workplace, logger);
 
-
-                    if (workplace.ActualStateType == StateType.Running) {
-                        LogDeviceInfo($"[ {workplace.Name} ] --INF-- Workplace in production", logger);
+                    if (devicePortIdIsOne) {
+                        LogDeviceInfo($"[ {workplace.Name} ] --INF-- Workplace has port in state 1", logger);
                         var specialIdleOpened = workplace.CheckIfWorkplaceHasSpecialIdleOpened(logger);
                         var normalIdleOpened = workplace.CheckIfWorkplaceHasNormalIdleOpened(logger);
                         if (specialIdleOpened) {

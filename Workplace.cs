@@ -689,7 +689,7 @@ namespace sklabelspecialservice {
             var connection = new MySqlConnection($"server={Program.IpAddress};port={Program.Port};userid={Program.Login};password={Program.Password};database={Program.Database};");
             try {
                 connection.Open();
-                var selectQuery = $"SELECT * from zapsi2.terminal_input_idle where DTE is null and DeviceID={DeviceOid} and IdleID in (SELECT OID from zapsi2.idle where IdleTypeID = 101)";
+                var selectQuery = $"SELECT * from zapsi2.terminal_input_idle where DTE is null and DeviceID={DeviceOid} and IdleID in (SELECT OID from zapsi2.idle where IdleTypeID = 101 or OID in (10,11))";
                 var command = new MySqlCommand(selectQuery, connection);
                 try {
                     var reader = command.ExecuteReader();
@@ -936,6 +936,39 @@ namespace sklabelspecialservice {
             }
 
             return normalIdleOpened;
+        }
+
+
+
+        public bool CheckIfDevicePortIdIsOne(Workplace workplace, ILogger logger) {
+            var data = 0;
+            var connection = new MySqlConnection($"server={Program.IpAddress};port={Program.Port};userid={Program.Login};password={Program.Password};database={Program.Database};");
+            try {
+                connection.Open();
+                var selectQuery = $"select Data from device_input_digital where DevicePortId=(SELECT `DevicePortID` FROM `workplace_port` WHERE `WorkplaceID` = '{workplace.Oid}' AND `Type` LIKE '%running%') order by DT desc limit 1";
+                var command = new MySqlCommand(selectQuery, connection);
+                try {
+                    var reader = command.ExecuteReader();
+                    if (reader.Read()) {
+                        data = Convert.ToInt32(reader["Data"]);
+                    }
+
+                    reader.Close();
+                    reader.Dispose();
+                } catch (Exception error) {
+                    LogError("[ " + Name + " ] --ERR-- Problem checking active idle: " + error.Message + selectQuery, logger);
+                } finally {
+                    command.Dispose();
+                }
+
+                connection.Close();
+            } catch (Exception error) {
+                LogError("[ " + Name + " ] --ERR-- Problem with database: " + error.Message, logger);
+            } finally {
+                connection.Dispose();
+            }
+
+            return data == 1;
         }
     }
 }
