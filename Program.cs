@@ -18,7 +18,7 @@ using static System.Console;
 
 namespace sklabelspecialservice {
     internal static class Program {
-        private const string BuildDate = "2020.1.1.6";
+        private const string BuildDate = "2020.1.1.7";
         private const string DataFolder = "Logs";
         internal static string IpAddress;
         internal static string Port;

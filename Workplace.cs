@@ -427,7 +427,7 @@ namespace sklabelspecialservice {
             LogInfo("[ " + Name + " ] --INF-- Analog port OID: " + portOid, logger);
             var orderStartDate = GetOrderDts(openTerminalInputOrder, logger);
             LogInfo("[ " + Name + " ] --INF-- Order start date: " + orderStartDate, logger);
-            var count = GetCountForPort(orderStartDate, portOid, logger);
+            var count = GetCountForPort(orderStartDate, portOid, logger)/6;
             LogInfo("[ " + Name + " ] --INF-- Count for open order: " + count, logger);
             var difference = DateTime.Now.Subtract(orderStartDate).TotalSeconds.ToString(CultureInfo.InvariantCulture);
             LogInfo("[ " + Name + " ] --INF-- Interval: " + difference, logger);
