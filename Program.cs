@@ -18,7 +18,7 @@ using static System.Console;
 
 namespace sklabelspecialservice {
     internal static class Program {
-        private const string BuildDate = "2020.1.1.7";
+        private const string BuildDate = "2020.1.1.10";
         private const string DataFolder = "Logs";
         internal static string IpAddress;
         internal static string Port;
@@ -433,8 +433,6 @@ namespace sklabelspecialservice {
                                 }
                             }
                         }
-
-                        workplace.UpdateCountFromAnalog(logger);
                     } else if (workplace.ActualStateType == StateType.Idle) {
                         LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Workplace in idle", logger);
                         var workplaceHasActiveIdle = workplace.CheckIfWorkplaceHasOpenIdle(logger);
@@ -442,18 +440,22 @@ namespace sklabelspecialservice {
                             LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Terminal idle opened, doing nothing", logger);
                         } else {
                             var actualDate = DateTime.Now;
-                            LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Terminal idle not opened, creating idle", logger);
                             var openTerminalInputOrder = workplace.CheckOpenTerminalInputOrder(logger);
                             if (openTerminalInputOrder) {
-                                workplace.CreateIdleInternalForWorkplace(logger, true, actualDate);
+                                var openTerminalInputOrderTisk = workplace.GetOpenTerminalInputOrderFor(idForWorkplaceModeTisk, logger);
+                                if (openTerminalInputOrderTisk == 0) {
+                                    LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Terminal idle not opened, order type tisk NOT opened, NOT creating idle", logger);
+                                } else {
+                                    LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Terminal idle not opened, order type tisk opened, creating idle", logger);
+                                    workplace.CreateIdleInternalForWorkplace(logger, true, actualDate);
+                                }
                             } else {
+                                LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Terminal idle not opened, order not opened, creating idle", logger);
                                 workplace.CreateIdleInternalForWorkplace(logger, false, actualDate);
                             }
 
                             LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Terminal_input_idle created", logger);
                         }
-
-                        workplace.UpdateCountFromAnalog(logger);
                     } else if (workplace.ActualStateType == StateType.PowerOff) {
                         LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Workplace offline", logger);
                         var openInternalIdle = workplace.CheckIfWorkplaceHasOpenInternalIdle(logger);
@@ -465,6 +467,7 @@ namespace sklabelspecialservice {
                         }
                     }
 
+                    workplace.UpdateCountFromAnalog(logger);
                     var sleepTime = Convert.ToDouble(_downloadEvery);
                     var waitTime = sleepTime - timer.ElapsedMilliseconds;
                     if ((waitTime) > 0) {
