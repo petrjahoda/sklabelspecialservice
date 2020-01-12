@@ -292,11 +292,15 @@ namespace sklabelspecialservice {
         }
 
 
-        public void SaveToK2(string codeForK2, int userId, int orderId, ILogger logger) {
+        public void SaveToK2(string codeForK2, int userId, int orderId, bool insertImpulses, int numberOfImpulses, ILogger logger) {
             var workplaceCode = GetWorkplaceCode(logger);
             var userLogin = GetUserLoginFor(userId, logger);
             var orderName = GetOrderNameFor(orderId, logger);
             var data = "\\id_stroj{" + workplaceCode + "}\\id_osoby{" + userLogin + "}\\id_zakazky{" + orderName + "}\\id_krok{" + codeForK2 + "}\\id_operace{" + orderName + "}";
+            if (insertImpulses) {
+                data += "\\pocet_impulzu{" + numberOfImpulses + "}";
+            }
+
             LogInfo($"[ {Name} ] --INF-- Saving {codeForK2} to K2 for workplace.code={workplaceCode}, order.name={orderName} and user.login={userLogin}", logger);
             var connection = new SqlConnection {ConnectionString = "Data Source=10.3.1.3; Initial Catalog=K2_SKLABEL; User id=zapsi; Password=DSgEEmPNxCwgTJjsd2uR;"};
             LogInfo($"[ {Name} ] --INF-- Connection string {connection.ConnectionString}", logger);
@@ -427,7 +431,7 @@ namespace sklabelspecialservice {
             LogInfo("[ " + Name + " ] --INF-- Analog port OID: " + portOid, logger);
             var orderStartDate = GetOrderDts(openTerminalInputOrder, logger);
             LogInfo("[ " + Name + " ] --INF-- Order start date: " + orderStartDate, logger);
-            var count = GetCountForPort(orderStartDate, portOid, logger)/6;
+            var count = GetCountForPort(orderStartDate, portOid, logger) / 6;
             LogInfo("[ " + Name + " ] --INF-- Count for open order: " + count, logger);
             var difference = DateTime.Now.Subtract(orderStartDate).TotalSeconds.ToString(CultureInfo.InvariantCulture);
             LogInfo("[ " + Name + " ] --INF-- Interval: " + difference, logger);
@@ -507,13 +511,16 @@ namespace sklabelspecialservice {
                 try {
                     var reader = command.ExecuteReader();
                     if (reader.Read()) {
-                        count = Convert.ToInt32(reader["Count"]);
+                        var value = reader["Count"];
+                        if( value != DBNull.Value ) {
+                            count = (int)Convert.ToDouble(value);
+                        } 
                     }
 
                     reader.Close();
                     reader.Dispose();
                 } catch (Exception error) {
-                    LogError("[ " + Name + " ] --ERR-- Problem checking open order for workplace: " + error.Message + selectQuery, logger);
+                    LogError("[ " + Name + " ] --ERR-- Problem getting count for workplace: " + error.Message + selectQuery, logger);
                 } finally {
                     command.Dispose();
                 }
@@ -544,7 +551,7 @@ namespace sklabelspecialservice {
                     reader.Close();
                     reader.Dispose();
                 } catch (Exception error) {
-                    LogError("[ " + Name + " ] --ERR-- Problem checking open order for workplace: " + error.Message + selectQuery, logger);
+                    LogError("[ " + Name + " ] --ERR-- Problem checking order DTS: " + error.Message + selectQuery, logger);
                 } finally {
                     command.Dispose();
                 }
@@ -689,7 +696,8 @@ namespace sklabelspecialservice {
             var connection = new MySqlConnection($"server={Program.IpAddress};port={Program.Port};userid={Program.Login};password={Program.Password};database={Program.Database};");
             try {
                 connection.Open();
-                var selectQuery = $"SELECT * from zapsi2.terminal_input_idle where DTE is null and DeviceID={DeviceOid} and IdleID in (SELECT OID from zapsi2.idle where IdleTypeID = 101 or OID in (10,11))";
+                var selectQuery =
+                    $"SELECT * from zapsi2.terminal_input_idle where DTE is null and DeviceID={DeviceOid} and IdleID in (SELECT OID from zapsi2.idle where IdleTypeID = 101 or OID in (10,11))";
                 var command = new MySqlCommand(selectQuery, connection);
                 try {
                     var reader = command.ExecuteReader();
@@ -939,13 +947,13 @@ namespace sklabelspecialservice {
         }
 
 
-
         public bool CheckIfDevicePortIdIsOne(Workplace workplace, ILogger logger) {
             var data = 0;
             var connection = new MySqlConnection($"server={Program.IpAddress};port={Program.Port};userid={Program.Login};password={Program.Password};database={Program.Database};");
             try {
                 connection.Open();
-                var selectQuery = $"select Data from device_input_digital where DevicePortId=(SELECT `DevicePortID` FROM `workplace_port` WHERE `WorkplaceID` = '{workplace.Oid}' AND `Type` LIKE '%running%') order by DT desc limit 1";
+                var selectQuery =
+                    $"select Data from device_input_digital where DevicePortId=(SELECT `DevicePortID` FROM `workplace_port` WHERE `WorkplaceID` = '{workplace.Oid}' AND `Type` LIKE '%running%') order by DT desc limit 1";
                 var command = new MySqlCommand(selectQuery, connection);
                 try {
                     var reader = command.ExecuteReader();
@@ -969,6 +977,68 @@ namespace sklabelspecialservice {
             }
 
             return data == 1;
+        }
+
+        public int GetNumberOfImpulsesForWorkplace(Workplace workplace, ILogger logger) {
+            var numberOfImpulses = 0;
+            var connection = new MySqlConnection($"server={Program.IpAddress};port={Program.Port};userid={Program.Login};password={Program.Password};database={Program.Database};");
+            numberOfImpulses = DownloadNumberOfImpulsesForWorkplace(workplace, logger, connection, numberOfImpulses);
+            UpdateWorkplaceUpdatedColumn(workplace, logger, connection);
+            return numberOfImpulses;
+        }
+
+        private void UpdateWorkplaceUpdatedColumn(Workplace workplace, ILogger logger, MySqlConnection connection) {
+            try {
+                connection.Open();
+                var updateQuery = $"update zapsi2.workplace set Updated = NOW() where workplaceId={workplace.Oid})";
+                var command = new MySqlCommand(updateQuery, connection);
+                try {
+                    command.ExecuteNonQuery();
+                } catch (Exception error) {
+                    LogError("[ " + Name + " ] --ERR-- Problem updating : " + error.Message + updateQuery, logger);
+                } finally {
+                    command.Dispose();
+                }
+
+                connection.Close();
+            } catch (Exception error) {
+                LogError("[ " + Name + " ] --ERR-- Problem with database: " + error.Message, logger);
+            } finally {
+                connection.Dispose();
+            }
+        }
+
+        private int DownloadNumberOfImpulsesForWorkplace(Workplace workplace, ILogger logger, MySqlConnection connection, int numberOfImpulses) {
+            try {
+                connection.Open();
+                var selectQuery =
+                    $"select SUM(Data) as sum from zapsi2.device_input_analog where DevicePortId=(SELECT DevicePortId FROM workplace_port WHERE HighValue = 100 and WorkplaceId={workplace.Oid}) and DT>(select Updated from zapsi2.workplace where OID={workplace.Oid})";
+                var command = new MySqlCommand(selectQuery, connection);
+                try {
+                    var reader = command.ExecuteReader();
+                    
+                    if (reader.Read()) {
+                        var value = reader["sum"];
+                        if( value != DBNull.Value ) {
+                            numberOfImpulses = (int)Convert.ToDouble(value);
+                        } 
+                    }
+                    reader.Close();
+                    reader.Dispose();
+                } catch (Exception error) {
+                    LogError("[ " + Name + " ] --ERR-- Problem getting sum of encoder: " + error.Message + selectQuery, logger);
+                } finally {
+                    command.Dispose();
+                }
+
+                connection.Close();
+            } catch (Exception error) {
+                LogError("[ " + Name + " ] --ERR-- Problem with database: " + error.Message, logger);
+            } finally {
+                connection.Dispose();
+            }
+
+            return numberOfImpulses;
         }
     }
 }

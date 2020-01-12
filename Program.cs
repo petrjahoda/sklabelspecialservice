@@ -18,7 +18,7 @@ using static System.Console;
 
 namespace sklabelspecialservice {
     internal static class Program {
-        private const string BuildDate = "2020.1.1.10";
+        private const string BuildDate = "2020.1.1.12";
         private const string DataFolder = "Logs";
         internal static string IpAddress;
         internal static string Port;
@@ -52,7 +52,6 @@ namespace sklabelspecialservice {
         private static void Main() {
             _systemIsActivated = false;
             WriteLine("  >> SK LABEL SPECIAL SERVICE <<");
-
             var outputPath = CreateLogFileIfNotExists("0-main.txt");
             using (CreateLogger(outputPath, out var logger)) {
                 CheckOsPlatform(logger);
@@ -378,8 +377,10 @@ namespace sklabelspecialservice {
                                     LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Open order is type Priprava", logger);
                                     var orderId = workplace.GetOrderIdFor(openTerminalInputOrder, logger);
                                     var userId = workplace.GetUserIdFor(openTerminalInputOrder, logger);
-                                    workplace.SaveToK2("117", userId, orderId, logger);
-                                    workplace.SaveToK2("110", userId, orderId, logger);
+                                    var numberOfImpulses = workplace.GetNumberOfImpulsesForWorkplace(workplace, logger);
+
+                                    workplace.SaveToK2("117", userId, orderId, true, numberOfImpulses, logger);
+                                    workplace.SaveToK2("110", userId, orderId, false, 0, logger);
                                 }
 
                                 openTerminalInputOrder = workplace.GetOpenTerminalInputOrderFor(idForWorkplaceModeTisk, logger);
@@ -389,8 +390,9 @@ namespace sklabelspecialservice {
                                     LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Open order is type Tisk", logger);
                                     var orderId = workplace.GetOrderIdFor(openTerminalInputOrder, logger);
                                     var userId = workplace.GetUserIdFor(openTerminalInputOrder, logger);
-                                    workplace.SaveToK2("118", userId, orderId, logger);
-                                    workplace.SaveToK2("114", userId, orderId, logger);
+                                    var numberOfImpulses = workplace.GetNumberOfImpulsesForWorkplace(workplace, logger);
+                                    workplace.SaveToK2("118", userId, orderId, true, numberOfImpulses, logger);
+                                    workplace.SaveToK2("114", userId, orderId, false, 0, logger);
                                 }
                             } else {
                                 LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Idle does NOT have note Myti, checking if idle is internal", logger);
@@ -408,7 +410,8 @@ namespace sklabelspecialservice {
                                         LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Open order is type Priprava: " + openTerminalInputOrder, logger);
                                         var orderId = workplace.GetOrderIdFor(openTerminalInputOrder, logger);
                                         var userId = workplace.GetUserIdFor(openTerminalInputOrder, logger);
-                                        workplace.SaveToK2("117", userId, orderId, logger);
+                                        var numberOfImpulses = workplace.GetNumberOfImpulsesForWorkplace(workplace, logger);
+                                        workplace.SaveToK2("117", userId, orderId, true, numberOfImpulses, logger);
                                     }
 
                                     openTerminalInputOrder = workplace.GetOpenTerminalInputOrderFor(idForWorkplaceModeTisk, logger);
@@ -418,7 +421,8 @@ namespace sklabelspecialservice {
                                         LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Open order is type Tisk: " + openTerminalInputOrder, logger);
                                         var orderId = workplace.GetOrderIdFor(openTerminalInputOrder, logger);
                                         var userId = workplace.GetUserIdFor(openTerminalInputOrder, logger);
-                                        workplace.SaveToK2("118", userId, orderId, logger);
+                                        var numberOfImpulses = workplace.GetNumberOfImpulsesForWorkplace(workplace, logger);
+                                        workplace.SaveToK2("118", userId, orderId, true, numberOfImpulses, logger);
                                     }
 
                                     openTerminalInputOrder = workplace.GetOpenTerminalInputOrderFor(idForWorkplaceModeUklid, logger);
@@ -428,7 +432,7 @@ namespace sklabelspecialservice {
                                         LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Open order is type Uklid: " + openTerminalInputOrder, logger);
                                         var orderId = workplace.GetOrderIdFor(openTerminalInputOrder, logger);
                                         var userId = workplace.GetUserIdFor(openTerminalInputOrder, logger);
-                                        workplace.SaveToK2("119", userId, orderId, logger);
+                                        workplace.SaveToK2("119", userId, orderId, false, 0, logger);
                                     }
                                 }
                             }
@@ -485,6 +489,7 @@ namespace sklabelspecialservice {
                 _numberOfRunningWorkplaces--;
             }
         }
+        
 
 
         private static void CheckSystemActivation(ILogger logger) {
