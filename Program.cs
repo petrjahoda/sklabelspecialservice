@@ -18,7 +18,7 @@ using static System.Console;
 
 namespace sklabelspecialservice {
     internal static class Program {
-        private const string BuildDate = "2020.1.1.12";
+        private const string BuildDate = "2020.1.1.23";
         private const string DataFolder = "Logs";
         internal static string IpAddress;
         internal static string Port;
@@ -349,6 +349,7 @@ namespace sklabelspecialservice {
                 var timer = Stopwatch.StartNew();
                 while (_databaseIsOnline && _loopCanRun && _systemIsActivated) {
                     workplace.UpdateActualStateForWorkplace(logger);
+                    workplace.UpdateIntervalForIdle(logger);
                     var idForWorkplaceModeTypeTisk = workplace.GetWorkplaceModeTypeIdFor("Tisk", logger);
                     var idForWorkplaceModeTypePriprava = workplace.GetWorkplaceModeTypeIdFor("Příprava", logger);
                     var idForWorkplaceModeTypeUklid = workplace.GetWorkplaceModeTypeIdFor("Úklid", logger);

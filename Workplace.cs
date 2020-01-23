@@ -512,9 +512,9 @@ namespace sklabelspecialservice {
                     var reader = command.ExecuteReader();
                     if (reader.Read()) {
                         var value = reader["Count"];
-                        if( value != DBNull.Value ) {
-                            count = (int)Convert.ToDouble(value);
-                        } 
+                        if (value != DBNull.Value) {
+                            count = (int) Convert.ToDouble(value);
+                        }
                     }
 
                     reader.Close();
@@ -1016,13 +1016,14 @@ namespace sklabelspecialservice {
                 var command = new MySqlCommand(selectQuery, connection);
                 try {
                     var reader = command.ExecuteReader();
-                    
+
                     if (reader.Read()) {
                         var value = reader["sum"];
-                        if( value != DBNull.Value ) {
-                            numberOfImpulses = (int)Convert.ToDouble(value);
-                        } 
+                        if (value != DBNull.Value) {
+                            numberOfImpulses = (int) Convert.ToDouble(value);
+                        }
                     }
+
                     reader.Close();
                     reader.Dispose();
                 } catch (Exception error) {
@@ -1039,6 +1040,34 @@ namespace sklabelspecialservice {
             }
 
             return numberOfImpulses;
+        }
+
+        public void UpdateIntervalForIdle(ILogger logger) {
+            var connection = new MySqlConnection(
+                $"server={Program.IpAddress};port={Program.Port};userid={Program.Login};password={Program.Password};database={Program.Database};");
+            try {
+                connection.Open();
+                var command = connection.CreateCommand();
+
+
+                command.CommandText =
+                    $"update zapsi2.terminal_input_idle SET zapsi2.terminal_input_idle.Interval = TIME_TO_SEC(timediff(NOW(), DTS)) where DTE is null and DeviceId={DeviceOid}";
+                try {
+                    command.ExecuteNonQuery();
+                } catch (Exception error) {
+                    LogError("[ MAIN ] --ERR-- problem updating interval for idle: " + error.Message + command.CommandText, logger);
+                } finally {
+                    command.Dispose();
+                }
+
+                connection.Close();
+            } catch (Exception error) {
+                LogError("[ " + Name + " ] --ERR-- Problem with database: " + error.Message, logger);
+            } finally {
+                connection.Dispose();
+            }
+
+            LogInfo("[ " + Name + " ] --INF-- Terminal_input_idle interval updated (if any idles present)", logger);
         }
     }
 }
