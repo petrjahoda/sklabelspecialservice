@@ -18,7 +18,7 @@ using static System.Console;
 
 namespace sklabelspecialservice {
     internal static class Program {
-        private const string BuildDate = "2020.1.1.23";
+        private const string BuildDate = "2020.1.2.11";
         private const string DataFolder = "Logs";
         internal static string IpAddress;
         internal static string Port;
@@ -433,7 +433,7 @@ namespace sklabelspecialservice {
                                         LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Open order is type Uklid: " + openTerminalInputOrder, logger);
                                         var orderId = workplace.GetOrderIdFor(openTerminalInputOrder, logger);
                                         var userId = workplace.GetUserIdFor(openTerminalInputOrder, logger);
-                                        workplace.SaveToK2("119", userId, orderId, false, 0, logger);
+                                        workplace.SaveToK2("116", userId, orderId, false, 0, logger);
                                     }
                                 }
                             }
