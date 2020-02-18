@@ -609,7 +609,7 @@ namespace sklabelspecialservice {
 
 
                 command.CommandText =
-                    $"UPDATE `zapsi2`.`terminal_input_idle` t SET t.`DTE` = '{dateToInsert}', t.Interval = TIME_TO_SEC(timediff('{dateToInsert}', DTS)) WHERE t.`DTE` is NULL and DeviceID={DeviceOid} and TIME_TO_SEC(timediff('{dateToInsert} > 10";
+                    $"UPDATE `zapsi2`.`terminal_input_idle` t SET t.`DTE` = '{dateToInsert}', t.Interval = TIME_TO_SEC(timediff('{dateToInsert}', DTS)) WHERE t.`DTE` is NULL and DeviceID={DeviceOid} and TIME_TO_SEC(timediff(NOW(),'{dateToInsert}')) > 10";
                 try {
                     command.ExecuteNonQuery();
                 } catch (Exception error) {
