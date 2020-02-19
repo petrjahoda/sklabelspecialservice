@@ -609,9 +609,11 @@ namespace sklabelspecialservice {
 
 
                 command.CommandText =
-                    $"UPDATE `zapsi2`.`terminal_input_idle` t SET t.`DTE` = '{dateToInsert}', t.Interval = TIME_TO_SEC(timediff('{dateToInsert}', DTS)) WHERE t.`DTE` is NULL and DeviceID={DeviceOid} and TIME_TO_SEC(timediff(NOW(),'{dateToInsert}')) > 10";
+                    $"UPDATE `zapsi2`.`terminal_input_idle` t SET t.`DTE` = '{dateToInsert}', t.Interval = TIME_TO_SEC(timediff('{dateToInsert}', DTS)) WHERE t.`DTE` is NULL and DeviceID={DeviceOid} and t.Interval > '10'";
                 try {
-                    command.ExecuteNonQuery();
+                    var result = command.ExecuteNonQuery();
+                    LogError("[ " + Name + " ] --INF--" + command.CommandText, logger);
+                    LogError("[ " + Name + " ] --INF--" + result, logger);
                 } catch (Exception error) {
                     LogError("[ MAIN ] --ERR-- problem closing idle in database: " + error.Message + command.CommandText, logger);
                 } finally {
@@ -922,6 +924,8 @@ namespace sklabelspecialservice {
                 connection.Open();
                 var selectQuery = $"SELECT * from zapsi2.terminal_input_idle where DTE is null and DeviceID={DeviceOid}";
                 var command = new MySqlCommand(selectQuery, connection);
+                LogError("[ " + Name + " ] --INF-- " + selectQuery, logger);
+
                 try {
                     var reader = command.ExecuteReader();
                     if (reader.Read()) {

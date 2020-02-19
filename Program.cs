@@ -357,11 +357,13 @@ namespace sklabelspecialservice {
                     var idForWorkplaceModePriprava = workplace.GetWorkplaceModeIdFor(idForWorkplaceModeTypePriprava, logger);
                     var idForWorkplaceModeUklid = workplace.GetWorkplaceModeIdFor(idForWorkplaceModeTypeUklid, logger);
                     var devicePortIdIsOne = workplace.CheckIfDevicePortIdIsOne(workplace, logger);
-
+                    LogDeviceInfo($"[ {workplace.Name} ] --INF-- State od deviceport: " + devicePortIdIsOne, logger);
                     if (devicePortIdIsOne) {
                         LogDeviceInfo($"[ {workplace.Name} ] --INF-- Workplace has port in state 1", logger);
                         var specialIdleOpened = workplace.CheckIfWorkplaceHasSpecialIdleOpened(logger);
                         var normalIdleOpened = workplace.CheckIfWorkplaceHasNormalIdleOpened(logger);
+                        LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Special idle: " + specialIdleOpened, logger);
+                        LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Normal idle: " + normalIdleOpened, logger);
                         if (specialIdleOpened) {
                             LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Special idle opened, doing nothing", logger);
                         } else if (normalIdleOpened) {
@@ -490,7 +492,6 @@ namespace sklabelspecialservice {
                 _numberOfRunningWorkplaces--;
             }
         }
-        
 
 
         private static void CheckSystemActivation(ILogger logger) {
