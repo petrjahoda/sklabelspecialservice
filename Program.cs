@@ -371,31 +371,34 @@ namespace sklabelspecialservice {
                             var idleHasNoteMyti = workplace.CheckIfWorkplaceHasNoteMyti(logger);
                             if (idleHasNoteMyti) {
                                 LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Idle has note Myti, closing idle, creating idle Myti", logger);
-                                workplace.CloseIdleForWorkplace(DateTime.Now, logger);
-                                workplace.CreateIdleMytiForWorkplace(logger, true, DateTime.Now);
-                                var openTerminalInputOrder = workplace.GetOpenTerminalInputOrderFor(idForWorkplaceModePriprava, logger);
-                                if (openTerminalInputOrder == 0) {
-                                    LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Open order is NOT type Priprava", logger);
-                                } else {
-                                    LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Open order is type Priprava", logger);
-                                    var orderId = workplace.GetOrderIdFor(openTerminalInputOrder, logger);
-                                    var userId = workplace.GetUserIdFor(openTerminalInputOrder, logger);
-                                    var numberOfImpulses = workplace.GetNumberOfImpulsesForWorkplace(workplace, logger);
+                                var closed = workplace.CloseIdleForWorkplace(DateTime.Now, logger);
+                                if (closed) {
+                                    LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Idle closed", logger);
+                                    workplace.CreateIdleMytiForWorkplace(logger, true, DateTime.Now);
+                                    var openTerminalInputOrder = workplace.GetOpenTerminalInputOrderFor(idForWorkplaceModePriprava, logger);
+                                    if (openTerminalInputOrder == 0) {
+                                        LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Open order is NOT type Priprava", logger);
+                                    } else {
+                                        LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Open order is type Priprava", logger);
+                                        var orderId = workplace.GetOrderIdFor(openTerminalInputOrder, logger);
+                                        var userId = workplace.GetUserIdFor(openTerminalInputOrder, logger);
+                                        var numberOfImpulses = workplace.GetNumberOfImpulsesForWorkplace(workplace, logger);
 
-                                    workplace.SaveToK2("117", userId, orderId, true, numberOfImpulses, logger);
-                                    workplace.SaveToK2("110", userId, orderId, false, 0, logger);
-                                }
+                                        workplace.SaveToK2("117", userId, orderId, true, numberOfImpulses, logger);
+                                        workplace.SaveToK2("110", userId, orderId, false, 0, logger);
+                                    }
 
-                                openTerminalInputOrder = workplace.GetOpenTerminalInputOrderFor(idForWorkplaceModeTisk, logger);
-                                if (openTerminalInputOrder == 0) {
-                                    LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Open order is NOT type Tisk", logger);
-                                } else {
-                                    LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Open order is type Tisk", logger);
-                                    var orderId = workplace.GetOrderIdFor(openTerminalInputOrder, logger);
-                                    var userId = workplace.GetUserIdFor(openTerminalInputOrder, logger);
-                                    var numberOfImpulses = workplace.GetNumberOfImpulsesForWorkplace(workplace, logger);
-                                    workplace.SaveToK2("118", userId, orderId, true, numberOfImpulses, logger);
-                                    workplace.SaveToK2("114", userId, orderId, false, 0, logger);
+                                    openTerminalInputOrder = workplace.GetOpenTerminalInputOrderFor(idForWorkplaceModeTisk, logger);
+                                    if (openTerminalInputOrder == 0) {
+                                        LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Open order is NOT type Tisk", logger);
+                                    } else {
+                                        LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Open order is type Tisk", logger);
+                                        var orderId = workplace.GetOrderIdFor(openTerminalInputOrder, logger);
+                                        var userId = workplace.GetUserIdFor(openTerminalInputOrder, logger);
+                                        var numberOfImpulses = workplace.GetNumberOfImpulsesForWorkplace(workplace, logger);
+                                        workplace.SaveToK2("118", userId, orderId, true, numberOfImpulses, logger);
+                                        workplace.SaveToK2("114", userId, orderId, false, 0, logger);
+                                    }
                                 }
                             } else {
                                 LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Idle does NOT have note Myti, checking if idle is internal", logger);
@@ -405,37 +408,40 @@ namespace sklabelspecialservice {
                                     workplace.CloseIdleForWorkplace(DateTime.Now, logger);
                                 } else {
                                     LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Idle is NOT internal, closing idle", logger);
-                                    workplace.CloseIdleForWorkplace(DateTime.Now, logger);
-                                    var openTerminalInputOrder = workplace.GetOpenTerminalInputOrderFor(idForWorkplaceModePriprava, logger);
-                                    if (openTerminalInputOrder == 0) {
-                                        LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Open order is NOT type Priprava: " + openTerminalInputOrder, logger);
-                                    } else {
-                                        LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Open order is type Priprava: " + openTerminalInputOrder, logger);
-                                        var orderId = workplace.GetOrderIdFor(openTerminalInputOrder, logger);
-                                        var userId = workplace.GetUserIdFor(openTerminalInputOrder, logger);
-                                        var numberOfImpulses = workplace.GetNumberOfImpulsesForWorkplace(workplace, logger);
-                                        workplace.SaveToK2("117", userId, orderId, true, numberOfImpulses, logger);
-                                    }
+                                    var closed = workplace.CloseIdleForWorkplace(DateTime.Now, logger);
+                                    if (closed) {
+                                        LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Idle closed", logger);
+                                        var openTerminalInputOrder = workplace.GetOpenTerminalInputOrderFor(idForWorkplaceModePriprava, logger);
+                                        if (openTerminalInputOrder == 0) {
+                                            LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Open order is NOT type Priprava: " + openTerminalInputOrder, logger);
+                                        } else {
+                                            LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Open order is type Priprava: " + openTerminalInputOrder, logger);
+                                            var orderId = workplace.GetOrderIdFor(openTerminalInputOrder, logger);
+                                            var userId = workplace.GetUserIdFor(openTerminalInputOrder, logger);
+                                            var numberOfImpulses = workplace.GetNumberOfImpulsesForWorkplace(workplace, logger);
+                                            workplace.SaveToK2("117", userId, orderId, true, numberOfImpulses, logger);
+                                        }
 
-                                    openTerminalInputOrder = workplace.GetOpenTerminalInputOrderFor(idForWorkplaceModeTisk, logger);
-                                    if (openTerminalInputOrder == 0) {
-                                        LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Open order is NOT type Tisk: " + openTerminalInputOrder, logger);
-                                    } else {
-                                        LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Open order is type Tisk: " + openTerminalInputOrder, logger);
-                                        var orderId = workplace.GetOrderIdFor(openTerminalInputOrder, logger);
-                                        var userId = workplace.GetUserIdFor(openTerminalInputOrder, logger);
-                                        var numberOfImpulses = workplace.GetNumberOfImpulsesForWorkplace(workplace, logger);
-                                        workplace.SaveToK2("118", userId, orderId, true, numberOfImpulses, logger);
-                                    }
+                                        openTerminalInputOrder = workplace.GetOpenTerminalInputOrderFor(idForWorkplaceModeTisk, logger);
+                                        if (openTerminalInputOrder == 0) {
+                                            LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Open order is NOT type Tisk: " + openTerminalInputOrder, logger);
+                                        } else {
+                                            LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Open order is type Tisk: " + openTerminalInputOrder, logger);
+                                            var orderId = workplace.GetOrderIdFor(openTerminalInputOrder, logger);
+                                            var userId = workplace.GetUserIdFor(openTerminalInputOrder, logger);
+                                            var numberOfImpulses = workplace.GetNumberOfImpulsesForWorkplace(workplace, logger);
+                                            workplace.SaveToK2("118", userId, orderId, true, numberOfImpulses, logger);
+                                        }
 
-                                    openTerminalInputOrder = workplace.GetOpenTerminalInputOrderFor(idForWorkplaceModeUklid, logger);
-                                    if (openTerminalInputOrder == 0) {
-                                        LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Open order is NOT type Uklid: " + openTerminalInputOrder, logger);
-                                    } else {
-                                        LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Open order is type Uklid: " + openTerminalInputOrder, logger);
-                                        var orderId = workplace.GetOrderIdFor(openTerminalInputOrder, logger);
-                                        var userId = workplace.GetUserIdFor(openTerminalInputOrder, logger);
-                                        workplace.SaveToK2("116", userId, orderId, false, 0, logger);
+                                        openTerminalInputOrder = workplace.GetOpenTerminalInputOrderFor(idForWorkplaceModeUklid, logger);
+                                        if (openTerminalInputOrder == 0) {
+                                            LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Open order is NOT type Uklid: " + openTerminalInputOrder, logger);
+                                        } else {
+                                            LogDeviceInfo("[ " + workplace.Name + " ] --INF-- Open order is type Uklid: " + openTerminalInputOrder, logger);
+                                            var orderId = workplace.GetOrderIdFor(openTerminalInputOrder, logger);
+                                            var userId = workplace.GetUserIdFor(openTerminalInputOrder, logger);
+                                            workplace.SaveToK2("116", userId, orderId, false, 0, logger);
+                                        }
                                     }
                                 }
                             }

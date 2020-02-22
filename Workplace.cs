@@ -598,7 +598,8 @@ namespace sklabelspecialservice {
             return analogPortOid;
         }
 
-        public void CloseIdleForWorkplace(DateTime dateTimeToInsert, ILogger logger) {
+        public bool CloseIdleForWorkplace(DateTime dateTimeToInsert, ILogger logger) {
+            var closed = false;
             var dateToInsert = string.Format("{0:yyyy-MM-dd HH:mm:ss}", DateTime.Now);
 
             var connection = new MySqlConnection(
@@ -614,6 +615,9 @@ namespace sklabelspecialservice {
                     var result = command.ExecuteNonQuery();
                     LogError("[ " + Name + " ] --INF--" + command.CommandText, logger);
                     LogError("[ " + Name + " ] --INF--" + result, logger);
+                    if (result == 1) {
+                        closed = true;
+                    }
                 } catch (Exception error) {
                     LogError("[ MAIN ] --ERR-- problem closing idle in database: " + error.Message + command.CommandText, logger);
                 } finally {
@@ -628,6 +632,7 @@ namespace sklabelspecialservice {
             }
 
             LogInfo("[ " + Name + " ] --INF-- Terminal_input_idle closed", logger);
+            return closed;
         }
 
         private string DownloadFromLoginTable(ILogger logger) {
