@@ -704,7 +704,7 @@ namespace sklabelspecialservice {
             try {
                 connection.Open();
                 var selectQuery =
-                    $"SELECT * from zapsi2.terminal_input_idle where DTE is null and DeviceID={DeviceOid} and IdleID in (SELECT OID from zapsi2.idle where IdleTypeID = 101 or OID in (10,11))";
+                    $"SELECT * from zapsi2.terminal_input_idle where DTE is null and DeviceID={DeviceOid} and IdleID in (SELECT OID from zapsi2.idle where IdleType IN (101,104) or OID in (10,11))";
                 var command = new MySqlCommand(selectQuery, connection);
                 try {
                     var reader = command.ExecuteReader();
